@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GVP BOT — Automação Inteligente para WhatsApp e Instagram</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body class="landing-page">
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <div class="nav-logo">
+      <div class="logo-icon">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <defs>
+            <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#3B82F6"/>
+              <stop offset="100%" style="stop-color:#8B5CF6"/>
+            </linearGradient>
+          </defs>
+          <rect width="32" height="32" rx="8" fill="url(#logoGrad)"/>
+          <path d="M8 10h16M8 16h10M8 22h13" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="24" cy="22" r="4" fill="#22C55E"/>
+        </svg>
+      </div>
+      <span class="logo-text">GVP<span class="logo-accent">BOT</span></span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#beneficios">Benefícios</a></li>
+      <li><a href="#como-funciona">Como Funciona</a></li>
+      <li><a href="#planos">Planos</a></li>
+      <li><a href="#depoimentos">Depoimentos</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="login.html" class="btn-ghost">Entrar</a>
+      <a href="cadastro.html" class="btn-primary">Começar Grátis</a>
+    </div>
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#beneficios">Benefícios</a>
+    <a href="#como-funciona">Como Funciona</a>
+    <a href="#planos">Planos</a>
+    <a href="#depoimentos">Depoimentos</a>
+    <a href="login.html">Entrar</a>
+    <a href="cadastro.html" class="btn-primary">Começar Grátis</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="hero-orb orb-1"></div>
+    <div class="hero-orb orb-2"></div>
+    <div class="hero-orb orb-3"></div>
+    <div class="grid-overlay"></div>
+  </div>
+  <div class="hero-container">
+    <div class="hero-badge">
+      <div class="badge-dot"></div>
+      <span>✨ Inteligência Artificial de última geração</span>
+    </div>
+    <h1 class="hero-title">
+      Transforme seu <span class="gradient-text">WhatsApp e Instagram</span> em máquinas automáticas de vendas.
+    </h1>
+    <p class="hero-subtitle">
+      O GVP BOT responde clientes automaticamente <strong>24h por dia</strong> com inteligência artificial. Nunca perca uma venda por falta de atendimento.
+    </p>
+    <div class="hero-actions">
+      <a href="cadastro.html" class="btn-hero-primary">
+        <span>Começar Agora</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <button class="btn-hero-ghost" onclick="openDemo()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <span>Ver Demonstração</span>
+      </button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <span class="stat-number">+5.000</span>
+        <span class="stat-label">Empresas ativas</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-number">98%</span>
+        <span class="stat-label">Taxa de satisfação</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-number">24/7</span>
+        <span class="stat-label">Atendimento ativo</span>
+      </div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="phone-mockup">
+      <div class="phone-screen">
+        <div class="chat-header">
+          <div class="chat-avatar">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=bot" alt="Bot" style="width:36px;height:36px;border-radius:50%;background:#8B5CF6"/>
+          </div>
+          <div class="chat-info">
+            <span class="chat-name">GVP BOT</span>
+            <span class="chat-status">online</span>
+          </div>
+        </div>
+        <div class="chat-messages">
+          <div class="msg msg-in anim-1">Olá! Como posso te ajudar hoje? 👋</div>
+          <div class="msg msg-out anim-2">Quero saber sobre os planos</div>
+          <div class="msg msg-in anim-3">Claro! Temos 3 planos incríveis para o seu negócio. Qual o seu segmento? 🚀</div>
+          <div class="msg msg-out anim-4">Tenho uma loja de roupas</div>
+          <div class="msg msg-in anim-5">Perfeito! Para lojas temos o Plano Pro por R$97/mês com automação completa! Quer ver? ✨</div>
+        </div>
+        <div class="chat-input-bar">
+          <span>Digite uma mensagem...</span>
+        </div>
+      </div>
+    </div>
+    <div class="float-card card-leads">
+      <div class="fc-icon" style="background:linear-gradient(135deg,#3B82F6,#8B5CF6)">📈</div>
+      <div class="fc-info">
+        <span class="fc-title">+127 leads</span>
+        <span class="fc-sub">hoje</span>
+      </div>
+    </div>
+    <div class="float-card card-response">
+      <div class="fc-icon" style="background:linear-gradient(135deg,#22C55E,#16A34A)">⚡</div>
+      <div class="fc-info">
+        <span class="fc-title">Resposta em 0.3s</span>
+        <span class="fc-sub">tempo médio</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LOGOS STRIP -->
+<section class="logos-strip">
+  <p>Integra com as principais plataformas</p>
+  <div class="logos-row">
+    <div class="logo-chip">🟢 WhatsApp Business</div>
+    <div class="logo-chip">📸 Instagram</div>
+    <div class="logo-chip">💬 Messenger</div>
+    <div class="logo-chip">🤖 ChatGPT API</div>
+    <div class="logo-chip">📊 Google Sheets</div>
+    <div class="logo-chip">🔗 Webhooks</div>
+  </div>
+</section>
+
+<!-- BENEFÍCIOS -->
+<section class="benefits" id="beneficios">
+  <div class="section-container">
+    <div class="section-header">
+      <div class="section-badge">Benefícios</div>
+      <h2>Por que o GVP BOT?</h2>
+      <p>Automatize seu atendimento e venda mais sem contratar mais funcionários</p>
+    </div>
+    <div class="benefits-grid">
+      <div class="benefit-card">
+        <div class="benefit-icon" style="--c1:#3B82F6;--c2:#1D4ED8">🤖</div>
+        <h3>IA Avançada</h3>
+        <p>Respostas naturais e inteligentes powered by ChatGPT. Seu bot parece humano.</p>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-icon" style="--c1:#8B5CF6;--c2:#6D28D9">⚡</div>
+        <h3>Resposta em segundos</h3>
+        <p>Nunca deixe um cliente esperando. Atendimento instantâneo 24h por dia, 7 dias por semana.</p>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-icon" style="--c1:#22C55E;--c2:#16A34A">📈</div>
+        <h3>Mais conversões</h3>
+        <p>Aumente suas vendas em até 3x com funis de vendas automatizados e inteligentes.</p>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-icon" style="--c1:#F59E0B;--c2:#D97706">🎯</div>
+        <h3>Segmentação</h3>
+        <p>Segmente seus leads automaticamente por interesse, localização e comportamento.</p>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-icon" style="--c1:#EC4899;--c2:#BE185D">📊</div>
+        <h3>Analytics em tempo real</h3>
+        <p>Dashboard completo com métricas de atendimento, conversão e engajamento.</p>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-icon" style="--c1:#14B8A6;--c2:#0D9488">🔒</div>
+        <h3>Segurança total</h3>
+        <p>Seus dados protegidos com criptografia de ponta a ponta. Conformidade LGPD.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMO FUNCIONA -->
+<section class="how-it-works" id="como-funciona">
+  <div class="section-container">
+    <div class="section-header">
+      <div class="section-badge">Como Funciona</div>
+      <h2>Simples de configurar,<br/>poderoso pra vender</h2>
+    </div>
+    <div class="steps-container">
+      <div class="step-line"></div>
+      <div class="step">
+        <div class="step-number">01</div>
+        <div class="step-content">
+          <h3>Conecte seus canais</h3>
+          <p>Conecte seu WhatsApp Business e Instagram em minutos. Sem complexidade técnica.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">02</div>
+        <div class="step-content">
+          <h3>Configure seu Bot</h3>
+          <p>Use nosso editor visual para criar fluxos de atendimento personalizados para o seu negócio.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">03</div>
+        <div class="step-content">
+          <h3>Ative e venda</h3>
+          <p>Seu bot entra em ação imediatamente. Acompanhe tudo pelo dashboard em tempo real.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PLANOS -->
+<section class="pricing" id="planos">
+  <div class="section-container">
+    <div class="section-header">
+      <div class="section-badge">Planos</div>
+      <h2>Escolha seu plano</h2>
+      <p>Sem taxa de instalação. Cancele quando quiser.</p>
+    </div>
+    <div class="pricing-toggle">
+      <span class="toggle-label active" id="toggleMonthly">Mensal</span>
+      <div class="toggle-switch" onclick="togglePricing()">
+        <div class="toggle-knob" id="toggleKnob"></div>
+      </div>
+      <span class="toggle-label" id="toggleAnnual">Anual <span class="discount-badge">-20%</span></span>
+    </div>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div class="plan-name">Starter</div>
+        <div class="plan-price">
+          <span class="price-currency">R$</span>
+          <span class="price-amount" data-monthly="47" data-annual="37">47</span>
+          <span class="price-period">/mês</span>
+        </div>
+        <p class="plan-desc">Ideal para começar sua automação</p>
+        <ul class="plan-features">
+          <li>✅ 1 número WhatsApp</li>
+          <li>✅ 500 conversas/mês</li>
+          <li>✅ Fluxos básicos</li>
+          <li>✅ Suporte por email</li>
+          <li>❌ Instagram</li>
+          <li>❌ Analytics avançado</li>
+        </ul>
+        <a href="cadastro.html" class="btn-plan">Começar Agora</a>
+      </div>
+      <div class="pricing-card featured">
+        <div class="popular-badge">Mais Popular</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-price">
+          <span class="price-currency">R$</span>
+          <span class="price-amount" data-monthly="97" data-annual="77">97</span>
+          <span class="price-period">/mês</span>
+        </div>
+        <p class="plan-desc">Para negócios em crescimento</p>
+        <ul class="plan-features">
+          <li>✅ 3 números WhatsApp</li>
+          <li>✅ Conversas ilimitadas</li>
+          <li>✅ Fluxos avançados + IA</li>
+          <li>✅ Instagram conectado</li>
+          <li>✅ Analytics completo</li>
+          <li>✅ Suporte prioritário</li>
+        </ul>
+        <a href="cadastro.html" class="btn-plan featured-btn">Começar Agora</a>
+      </div>
+      <div class="pricing-card">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-price">
+          <span class="price-currency">R$</span>
+          <span class="price-amount" data-monthly="247" data-annual="197">247</span>
+          <span class="price-period">/mês</span>
+        </div>
+        <p class="plan-desc">Para grandes operações</p>
+        <ul class="plan-features">
+          <li>✅ Números ilimitados</li>
+          <li>✅ Multi-agentes</li>
+          <li>✅ API dedicada</li>
+          <li>✅ White-label</li>
+          <li>✅ Dashboard customizado</li>
+          <li>✅ Gerente de conta</li>
+        </ul>
+        <a href="cadastro.html" class="btn-plan">Falar com Vendas</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEPOIMENTOS -->
+<section class="testimonials" id="depoimentos">
+  <div class="section-container">
+    <div class="section-header">
+      <div class="section-badge">Depoimentos</div>
+      <h2>O que nossos clientes dizem</h2>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p>"O GVP BOT transformou minha loja. Agora vendo enquanto durmo. Meu faturamento aumentou 40% no primeiro mês!"</p>
+        <div class="testimonial-author">
+          <div class="author-avatar" style="background:linear-gradient(135deg,#3B82F6,#8B5CF6)">MC</div>
+          <div>
+            <span class="author-name">Marcela Costa</span>
+            <span class="author-role">Loja de Roupas Femininas</span>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card featured-t">
+        <div class="stars">★★★★★</div>
+        <p>"Incrível! Antes eu perdia clientes porque não conseguia responder rápido. Agora o bot atende tudo e eu só fecho os pedidos!"</p>
+        <div class="testimonial-author">
+          <div class="author-avatar" style="background:linear-gradient(135deg,#22C55E,#16A34A)">RS</div>
+          <div>
+            <span class="author-name">Rafael Santos</span>
+            <span class="author-role">Restaurante Delivery</span>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p>"Configurei em menos de 1 hora e já no primeiro dia capturei 23 leads novos. ROI imediato. Produto excepcional!"</p>
+        <div class="testimonial-author">
+          <div class="author-avatar" style="background:linear-gradient(135deg,#F59E0B,#D97706)">AP</div>
+          <div>
+            <span class="author-name">Ana Paula</span>
+            <span class="author-role">Clínica de Estética</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+  <div class="section-container">
+    <div class="section-header">
+      <div class="section-badge">FAQ</div>
+      <h2>Perguntas Frequentes</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          <span>Preciso saber programar para usar?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer">Não! O GVP BOT foi feito para qualquer pessoa. Nossa interface é 100% visual e intuitiva. Em minutos você já tem seu bot funcionando.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          <span>É seguro conectar meu WhatsApp?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer">Sim! Usamos a API oficial do WhatsApp Business. Seus dados são criptografados e nunca compartilhados com terceiros. Total conformidade com a LGPD.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          <span>Posso cancelar quando quiser?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer">Sim, sem multa e sem burocracia. Você pode cancelar a qualquer momento pelo próprio dashboard. Sem contratos de fidelidade.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          <span>Quanto tempo leva para configurar?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer">A maioria dos nossos clientes ativa o bot em menos de 1 hora. Nossa equipe de suporte também pode te ajudar gratuitamente na configuração inicial.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          <span>O bot funciona no Instagram também?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer">Sim! Nos planos Pro e Enterprise você pode conectar seu Instagram Business e automatizar respostas do Direct e comentários.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-final">
+  <div class="cta-orb"></div>
+  <div class="section-container">
+    <h2>Pronto para automatizar e vender mais?</h2>
+    <p>Junte-se a +5.000 empresas que já usam o GVP BOT</p>
+    <a href="cadastro.html" class="btn-hero-primary">
+      <span>Começar Gratuitamente</span>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+    <p class="cta-small">Sem cartão de crédito · Teste por 7 dias grátis</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-brand">
+      <div class="nav-logo">
+        <div class="logo-icon">
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+            <defs>
+              <linearGradient id="logoGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#3B82F6"/>
+                <stop offset="100%" style="stop-color:#8B5CF6"/>
+              </linearGradient>
+            </defs>
+            <rect width="32" height="32" rx="8" fill="url(#logoGrad2)"/>
+            <path d="M8 10h16M8 16h10M8 22h13" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="24" cy="22" r="4" fill="#22C55E"/>
+          </svg>
+        </div>
+        <span class="logo-text">GVP<span class="logo-accent">BOT</span></span>
+      </div>
+      <p>Automação inteligente para WhatsApp e Instagram. Venda mais, trabalhe menos.</p>
+      <div class="social-links">
+        <a href="#" class="social-link">📸</a>
+        <a href="#" class="social-link">💬</a>
+        <a href="#" class="social-link">🐦</a>
+      </div>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <h4>Produto</h4>
+        <a href="#">Funcionalidades</a>
+        <a href="#planos">Preços</a>
+        <a href="#">Integrações</a>
+        <a href="#">Roadmap</a>
+      </div>
+      <div class="footer-col">
+        <h4>Empresa</h4>
+        <a href="#">Sobre nós</a>
+        <a href="#">Blog</a>
+        <a href="#">Casos de sucesso</a>
+        <a href="#">Afiliados</a>
+      </div>
+      <div class="footer-col">
+        <h4>Suporte</h4>
+        <a href="#">Documentação</a>
+        <a href="#">Central de ajuda</a>
+        <a href="#">Status</a>
+        <a href="#">Contato</a>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <a href="#">Termos de uso</a>
+        <a href="#">Privacidade</a>
+        <a href="#">LGPD</a>
+        <a href="#">Cookies</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 GVP BOT. Todos os direitos reservados.</span>
+    <span>Feito com ❤️ no Brasil</span>
+  </div>
+</footer>
+
+<!-- DEMO MODAL -->
+<div class="modal-overlay" id="demoModal" onclick="closeDemo()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeDemo()">✕</button>
+    <div class="modal-content">
+      <h3>🎬 Demonstração GVP BOT</h3>
+      <div class="demo-screen">
+        <div class="demo-chat">
+          <div class="demo-msg in">Olá! Sou o GVP BOT. Como posso ajudar? 👋</div>
+          <div class="demo-msg out">Quero fazer um pedido</div>
+          <div class="demo-msg in">Ótimo! Qual produto você tem interesse?<br/>1️⃣ Produto A<br/>2️⃣ Produto B<br/>3️⃣ Ver catálogo completo</div>
+          <div class="demo-msg out">2</div>
+          <div class="demo-msg in">Produto B - R$ 89,90. Vou te enviar o link de pagamento! ✅</div>
+        </div>
+      </div>
+      <p style="text-align:center;color:var(--text-muted);margin-top:1rem">Isso tudo acontece automaticamente, sem você precisar estar online.</p>
+      <a href="cadastro.html" class="btn-hero-primary" style="display:inline-flex;margin:1rem auto 0;width:auto">Quero esse bot →</a>
+    </div>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+</body>
+</html>
