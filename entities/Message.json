@@ -1,0 +1,40 @@
+{
+  "type": "object",
+  "properties": {
+    "conversation_id": {
+      "type": "string"
+    },
+    "sender": {
+      "type": "string",
+      "enum": [
+        "bot",
+        "user",
+        "agent"
+      ],
+      "default": "bot"
+    },
+    "content": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "image",
+        "audio",
+        "menu",
+        "system"
+      ],
+      "default": "text"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false
+    },
+    "timestamp": {
+      "type": "string"
+    }
+  },
+  "required": [],
+  "name": "Message"
+}

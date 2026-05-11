@@ -1,0 +1,50 @@
+{
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "user"
+      ]
+    },
+    "phone": {
+      "type": "string"
+    },
+    "company_name": {
+      "type": "string"
+    },
+    "niche": {
+      "type": "string"
+    },
+    "avatar_url": {
+      "type": "string"
+    },
+    "plan": {
+      "type": "string",
+      "enum": [
+        "trial",
+        "starter",
+        "pro",
+        "premium"
+      ],
+      "default": "trial"
+    },
+    "trial_ends_at": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "onboarding_step": {
+      "type": "number",
+      "default": 1
+    },
+    "onboarding_done": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": []
+}

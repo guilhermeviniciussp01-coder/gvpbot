@@ -1,0 +1,70 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "contacted",
+        "negotiation",
+        "closed",
+        "lost"
+      ],
+      "default": "new"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "value": {
+      "type": "number"
+    },
+    "crm_stage": {
+      "type": "string",
+      "enum": [
+        "Novo Lead",
+        "Em Contato",
+        "Negocia\u00e7\u00e3o",
+        "Fechado",
+        "Perdido"
+      ],
+      "default": "Novo Lead"
+    },
+    "crm_order": {
+      "type": "number",
+      "default": 0
+    },
+    "avatar_color": {
+      "type": "string"
+    },
+    "last_message": {
+      "type": "string"
+    },
+    "last_seen": {
+      "type": "string"
+    },
+    "conversation_count": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [],
+  "name": "Lead"
+}
