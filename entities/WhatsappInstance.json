@@ -1,0 +1,55 @@
+{
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "evolution_instance_name": {
+      "type": "string"
+    },
+    "evolution_api_url": {
+      "type": "string"
+    },
+    "evolution_api_key": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "disconnected",
+        "connecting",
+        "connected",
+        "error"
+      ]
+    },
+    "phone_number": {
+      "type": "string"
+    },
+    "profile_name": {
+      "type": "string"
+    },
+    "profile_picture": {
+      "type": "string"
+    },
+    "qr_code": {
+      "type": "string"
+    },
+    "last_connected": {
+      "type": "string"
+    },
+    "webhook_url": {
+      "type": "string"
+    },
+    "messages_today": {
+      "type": "number"
+    },
+    "messages_total": {
+      "type": "number"
+    }
+  },
+  "required": [],
+  "name": "WhatsappInstance"
+}

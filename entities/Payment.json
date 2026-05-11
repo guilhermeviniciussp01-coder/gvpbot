@@ -1,0 +1,48 @@
+{
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "subscription_id": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected",
+        "refunded"
+      ]
+    },
+    "method": {
+      "type": "string",
+      "enum": [
+        "credit_card",
+        "pix",
+        "boleto"
+      ]
+    },
+    "mercadopago_payment_id": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "paid_at": {
+      "type": "string"
+    },
+    "invoice_url": {
+      "type": "string"
+    }
+  },
+  "required": [],
+  "name": "Payment"
+}

@@ -1,0 +1,50 @@
+{
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "plan_id": {
+      "type": "string"
+    },
+    "plan_slug": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "trial",
+        "active",
+        "past_due",
+        "cancelled",
+        "expired"
+      ]
+    },
+    "trial_start": {
+      "type": "string"
+    },
+    "trial_end": {
+      "type": "string"
+    },
+    "current_period_start": {
+      "type": "string"
+    },
+    "current_period_end": {
+      "type": "string"
+    },
+    "mercadopago_subscription_id": {
+      "type": "string"
+    },
+    "cancelled_at": {
+      "type": "string"
+    },
+    "messages_used": {
+      "type": "number"
+    },
+    "instances_used": {
+      "type": "number"
+    }
+  },
+  "required": [],
+  "name": "Subscription"
+}

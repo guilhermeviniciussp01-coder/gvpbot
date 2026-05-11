@@ -1,0 +1,49 @@
+{
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "instance_id": {
+      "type": "string"
+    },
+    "openrouter_api_key": {
+      "type": "string"
+    },
+    "model": {
+      "type": "string"
+    },
+    "temperature": {
+      "type": "number"
+    },
+    "max_tokens": {
+      "type": "number"
+    },
+    "response_delay_min": {
+      "type": "number"
+    },
+    "response_delay_max": {
+      "type": "number"
+    },
+    "system_prompt": {
+      "type": "string"
+    },
+    "bot_name": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean"
+    },
+    "typing_simulation": {
+      "type": "boolean"
+    },
+    "context_memory": {
+      "type": "number"
+    },
+    "language": {
+      "type": "string"
+    }
+  },
+  "required": [],
+  "name": "AiSettings"
+}

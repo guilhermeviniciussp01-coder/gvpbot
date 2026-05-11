@@ -1,13 +1,6 @@
 {
   "type": "object",
   "properties": {
-    "role": {
-      "type": "string",
-      "enum": [
-        "admin",
-        "user"
-      ]
-    },
     "phone": {
       "type": "string"
     },
@@ -17,9 +10,6 @@
     "niche": {
       "type": "string"
     },
-    "avatar_url": {
-      "type": "string"
-    },
     "plan": {
       "type": "string",
       "enum": [
@@ -27,23 +17,29 @@
         "starter",
         "pro",
         "premium"
-      ],
-      "default": "trial"
+      ]
     },
-    "trial_ends_at": {
+    "plan_status": {
+      "type": "string",
+      "enum": [
+        "trial",
+        "active",
+        "past_due",
+        "cancelled",
+        "blocked"
+      ]
+    },
+    "trial_end": {
       "type": "string"
     },
-    "is_active": {
-      "type": "boolean",
-      "default": true
+    "is_admin": {
+      "type": "boolean"
     },
-    "onboarding_step": {
-      "type": "number",
-      "default": 1
+    "timezone": {
+      "type": "string"
     },
     "onboarding_done": {
-      "type": "boolean",
-      "default": false
+      "type": "boolean"
     }
   },
   "required": []

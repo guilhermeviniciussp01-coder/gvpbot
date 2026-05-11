@@ -1,0 +1,43 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string",
+      "enum": [
+        "trial",
+        "starter",
+        "pro",
+        "premium"
+      ]
+    },
+    "price_monthly": {
+      "type": "number"
+    },
+    "price_annual": {
+      "type": "number"
+    },
+    "max_instances": {
+      "type": "number"
+    },
+    "max_messages": {
+      "type": "number"
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "is_active": {
+      "type": "boolean"
+    },
+    "mercadopago_plan_id": {
+      "type": "string"
+    }
+  },
+  "required": [],
+  "name": "Plan"
+}
