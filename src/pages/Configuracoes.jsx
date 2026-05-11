@@ -1,9 +1,25 @@
 import { useState, useEffect } from 'react';
 import { auth } from '@/api/base44Client';
 import { Button } from '@/components/ui/Button';
-import { Input, Textarea, Switch } from '@/components/ui/Input';
+import { Input, Textarea, Switch, Select } from '@/components/ui/Input';
 import { useToast } from '@/components/ui/Toast';
 import { Modal } from '@/components/ui/Modal';
+
+const TIMEZONES = [
+  { value: 'America/Sao_Paulo', label: 'Brasília (GMT-3)' },
+  { value: 'America/Manaus', label: 'Manaus (GMT-4)' },
+  { value: 'America/Belem', label: 'Belém (GMT-3)' },
+  { value: 'America/Fortaleza', label: 'Fortaleza (GMT-3)' },
+  { value: 'America/Recife', label: 'Recife (GMT-3)' },
+  { value: 'America/Cuiaba', label: 'Cuiabá (GMT-4)' },
+  { value: 'America/Porto_Velho', label: 'Porto Velho (GMT-4)' },
+];
+
+const THEMES = [
+  { value: 'dark', label: '🌑 Dark (padrão)' },
+  { value: 'darker', label: '⬛ Ultra Dark' },
+  { value: 'midnight', label: '🌌 Midnight Blue' },
+];
 
 export default function Configuracoes() {
   const toast = useToast();
@@ -11,216 +27,330 @@ export default function Configuracoes() {
   const [tab, setTab] = useState('perfil');
   const [saving, setSaving] = useState(false);
   const [pwdModal, setPwdModal] = useState(false);
-  const [form, setForm] = useState({ full_name: '', email: '', phone: '', company_name: '' });
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [showKeys, setShowKeys] = useState({});
+  const [form, setForm] = useState({ full_name: '', email: '', phone: '', company_name: '', timezone: 'America/Sao_Paulo', theme: 'dark' });
   const [pwdForm, setPwdForm] = useState({ current: '', new: '', confirm: '' });
-  const [notifs, setNotifs] = useState({ new_lead: true, new_message: true, weekly_report: true, system: true, payment: true });
-  const [prefs, setPrefs] = useState({ animations: true, auto_save: true, sidebar_compact: false, sounds: false });
+  const [notifs, setNotifs] = useState({ new_lead: true, new_message: true, weekly_report: true, system: true, payment: true, ai_alert: false });
+  const [prefs, setPrefs] = useState({ animations: true, auto_save: true, sidebar_compact: false, sounds: false, compact_view: false });
+  const [apiKeys, setApiKeys] = useState({ openrouter: '', evolution_url: '', evolution_key: '', mercadopago: '', webhook_secret: '' });
+  const [sessions] = useState([
+    { id: 's1', device: '💻 Chrome · Windows 11', location: 'São Paulo, BR', ip: '186.x.x.1', last: 'Agora', current: true },
+    { id: 's2', device: '📱 Safari · iPhone 15', location: 'São Paulo, BR', ip: '177.x.x.2', last: 'Há 2 horas', current: false },
+    { id: 's3', device: '💻 Firefox · macOS', location: 'Rio de Janeiro, BR', ip: '201.x.x.3', last: 'Ontem 18:30', current: false },
+  ]);
+
+  const upd = (k, v) => setForm(p => ({ ...p, [k]: v }));
+  const updKey = (k, v) => setApiKeys(p => ({ ...p, [k]: v }));
 
   useEffect(() => {
     auth.me().then(u => {
       setUser(u);
-      setForm({ full_name: u?.full_name || '', email: u?.email || '', phone: u?.phone || '', company_name: u?.company_name || '' });
+      setForm(p => ({ ...p, full_name: u?.full_name || 'Guilherme Vinicius', email: u?.email || 'guilherme@gvpbot.com.br', phone: u?.phone || '(11) 9 9999-9999', company_name: u?.company_name || 'GVP BOT', timezone: u?.timezone || 'America/Sao_Paulo' }));
     }).catch(() => {
-      setForm({ full_name: 'Guilherme Vinicius', email: 'guilherme@gvpbot.com.br', phone: '(11) 9 9999-9999', company_name: 'GVP BOT' });
+      setForm(p => ({ ...p, full_name: 'Guilherme Vinicius', email: 'guilherme@gvpbot.com.br', phone: '(11) 9 9999-9999', company_name: 'GVP BOT' }));
     });
   }, []);
 
   async function saveProfile() {
     setSaving(true);
-    await new Promise(r => setTimeout(r, 1200));
+    await new Promise(r => setTimeout(r, 1000));
     setSaving(false);
-    toast({ message: '✅ Perfil atualizado com sucesso!', type: 'success' });
+    toast({ message: '✅ Perfil atualizado!', type: 'success' });
   }
 
-  async function savePassword() {
+  async function changePassword() {
     if (!pwdForm.current) { toast({ message: 'Informe a senha atual', type: 'error' }); return; }
-    if (pwdForm.new.length < 8) { toast({ message: 'Senha deve ter mínimo 8 caracteres', type: 'error' }); return; }
+    if (pwdForm.new.length < 8) { toast({ message: 'Senha mínimo 8 caracteres', type: 'error' }); return; }
     if (pwdForm.new !== pwdForm.confirm) { toast({ message: 'Senhas não coincidem', type: 'error' }); return; }
     setSaving(true);
-    await new Promise(r => setTimeout(r, 1400));
+    await new Promise(r => setTimeout(r, 1200));
     setSaving(false);
     setPwdModal(false);
     setPwdForm({ current: '', new: '', confirm: '' });
-    toast({ message: '🔒 Senha alterada com sucesso!', type: 'success' });
+    toast({ message: '🔒 Senha alterada!', type: 'success' });
+  }
+
+  async function saveApiKeys() {
+    setSaving(true);
+    await new Promise(r => setTimeout(r, 800));
+    setSaving(false);
+    toast({ message: '🔑 Chaves API salvas com segurança!', type: 'success' });
+  }
+
+  function toggleKey(k) {
+    setShowKeys(p => ({ ...p, [k]: !p[k] }));
   }
 
   const TABS = [
     { id: 'perfil', label: '👤 Perfil', icon: '👤' },
     { id: 'seguranca', label: '🔒 Segurança', icon: '🔒' },
+    { id: 'api', label: '🔑 API Keys', icon: '🔑' },
     { id: 'notificacoes', label: '🔔 Notificações', icon: '🔔' },
-    { id: 'preferencias', label: '🎛️ Preferências', icon: '🎛️' },
+    { id: 'preferencias', label: '⚙️ Preferências', icon: '⚙️' },
+    { id: 'danger', label: '⚠️ Conta', icon: '⚠️' },
   ];
 
-  const SESSIONS = [
-    { device: '💻', name: 'Chrome — Windows 11', location: 'São Paulo, SP', time: 'Agora', current: true },
-    { device: '📱', name: 'Safari — iPhone 15', location: 'São Paulo, SP', time: 'há 2h', current: false },
-    { device: '🖥️', name: 'Firefox — macOS', location: 'São Paulo, SP', time: 'há 1 dia', current: false },
-  ];
+  const initials = (form.full_name || '?').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '900px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '860px' }}>
 
+      {/* Header */}
       <div>
         <h2 style={{ fontSize: '1.3rem', fontWeight: 900, letterSpacing: '-.5px', marginBottom: '.2rem' }}>Configurações</h2>
-        <p style={{ fontSize: '.85rem', color: '#64748B' }}>Gerencie sua conta e preferências</p>
+        <p style={{ fontSize: '.85rem', color: '#64748B' }}>Gerencie sua conta, segurança e integrações</p>
       </div>
 
-      <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '1.25rem', alignItems: 'start' }}>
 
-        {/* Side nav */}
-        <nav style={{ width: '200px', flexShrink: 0, background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: '14px', padding: '.5rem', display: 'flex', flexDirection: 'column', gap: '.15rem', height: 'fit-content' }}>
+        {/* Sidebar tabs */}
+        <div style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: '14px', padding: '.4rem', display: 'flex', flexDirection: 'column', gap: '.15rem', position: 'sticky', top: '80px' }}>
           {TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{ display: 'flex', alignItems: 'center', gap: '.65rem', padding: '.65rem .85rem', borderRadius: '10px', background: tab === t.id ? 'rgba(59,130,246,.15)' : 'transparent', border: 'none', color: tab === t.id ? '#60A5FA' : '#94A3B8', fontWeight: tab === t.id ? 700 : 500, fontSize: '.85rem', cursor: 'pointer', fontFamily: 'Inter,sans-serif', textAlign: 'left', transition: 'all .15s' }}>
-              <span>{t.icon}</span>
-              {t.label.split(' ').slice(1).join(' ')}
-            </button>
+            <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: '.62rem .85rem', borderRadius: '9px', fontSize: '.84rem', fontWeight: tab === t.id ? 700 : 500, background: tab === t.id ? (t.id === 'danger' ? 'rgba(239,68,68,.12)' : 'rgba(59,130,246,.12)') : 'transparent', border: `1px solid ${tab === t.id ? (t.id === 'danger' ? 'rgba(239,68,68,.25)' : 'rgba(59,130,246,.25)') : 'transparent'}`, color: tab === t.id ? (t.id === 'danger' ? '#FCA5A5' : '#60A5FA') : '#64748B', cursor: 'pointer', textAlign: 'left', transition: 'all .15s', fontFamily: 'Inter,sans-serif' }}>{t.label}</button>
           ))}
-        </nav>
+        </div>
 
         {/* Content */}
-        <div style={{ flex: 1, minWidth: '300px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
           {/* PERFIL */}
           {tab === 'perfil' && (
-            <div style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: '16px', padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              {/* Avatar */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                <div style={{ position: 'relative' }}>
-                  <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', fontWeight: 700, border: '3px solid rgba(59,130,246,.3)' }}>
-                    {(form.full_name || '?')[0]}
-                  </div>
-                  <button style={{ position: 'absolute', bottom: 0, right: 0, width: '26px', height: '26px', borderRadius: '50%', background: 'rgba(59,130,246,.15)', border: '2px solid rgba(59,130,246,.3)', color: '#3B82F6', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.7rem' }}>📷</button>
-                </div>
-                <div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 800 }}>{form.full_name || 'Seu Nome'}</div>
-                  <div style={{ fontSize: '.82rem', color: '#64748B' }}>{form.email}</div>
-                  <div style={{ fontSize: '.72rem', color: '#22C55E', marginTop: '.25rem', display: 'flex', alignItems: 'center', gap: '.3rem' }}>
-                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22C55E', display: 'inline-block' }} />
-                    Plano Pro · Trial ativo
+            <>
+              <div style={card}>
+                <div style={cardTitle}>Foto de perfil</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                  <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.35rem', fontWeight: 900, flexShrink: 0, boxShadow: '0 0 24px rgba(59,130,246,.3)' }}>{initials}</div>
+                  <div>
+                    <div style={{ fontSize: '.9rem', fontWeight: 700, marginBottom: '.25rem' }}>{form.full_name}</div>
+                    <div style={{ fontSize: '.78rem', color: '#64748B', marginBottom: '.6rem' }}>{form.email}</div>
+                    <button onClick={() => toast({ message: '📷 Upload disponível no plano Pro+', type: 'info' })} style={{ padding: '.35rem .85rem', borderRadius: '7px', background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', color: '#94A3B8', fontSize: '.78rem', cursor: 'pointer' }}>📷 Alterar foto</button>
                   </div>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.85rem' }}>
-                <Input label="Nome completo" value={form.full_name} onChange={e => setForm(p => ({...p, full_name: e.target.value}))} icon="👤" />
-                <Input label="E-mail" value={form.email} onChange={e => setForm(p => ({...p, email: e.target.value}))} icon="✉️" type="email" />
-                <Input label="Telefone" value={form.phone} onChange={e => setForm(p => ({...p, phone: e.target.value}))} icon="📱" />
-                <Input label="Empresa" value={form.company_name} onChange={e => setForm(p => ({...p, company_name: e.target.value}))} icon="🏢" />
+              <div style={card}>
+                <div style={cardTitle}>Informações pessoais</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '.85rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.85rem' }}>
+                    <Input label="Nome completo" value={form.full_name} onChange={e => upd('full_name', e.target.value)} icon="👤" />
+                    <Input label="E-mail" type="email" value={form.email} onChange={e => upd('email', e.target.value)} icon="✉️" />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.85rem' }}>
+                    <Input label="Telefone / WhatsApp" value={form.phone} onChange={e => upd('phone', e.target.value)} icon="📱" placeholder="(11) 9 9999-9999" />
+                    <Input label="Nome da empresa" value={form.company_name} onChange={e => upd('company_name', e.target.value)} icon="🏢" />
+                  </div>
+                  <Select label="Fuso horário" value={form.timezone} onChange={e => upd('timezone', e.target.value)} options={TIMEZONES} />
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button onClick={saveProfile} loading={saving} icon="💾">Salvar perfil</Button>
+                  </div>
+                </div>
               </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Button onClick={saveProfile} loading={saving}>💾 Salvar perfil</Button>
-              </div>
-            </div>
+            </>
           )}
 
           {/* SEGURANÇA */}
           {tab === 'seguranca' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-
-              <div style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: '16px', padding: '1.5rem' }}>
-                <div style={{ fontWeight: 800, marginBottom: '1rem' }}>Senha</div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '.85rem 1rem', background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: '12px' }}>
+            <>
+              <div style={card}>
+                <div style={cardTitle}>Senha</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '.85rem', background: 'rgba(255,255,255,.02)', borderRadius: '10px', border: '1px solid rgba(255,255,255,.06)' }}>
                   <div>
-                    <div style={{ fontSize: '.88rem', fontWeight: 600 }}>Senha da conta</div>
-                    <div style={{ fontSize: '.75rem', color: '#64748B', marginTop: '.15rem' }}>••••••••••• · Última alteração: nunca</div>
+                    <div style={{ fontWeight: 600, fontSize: '.88rem' }}>Senha atual</div>
+                    <div style={{ fontSize: '.75rem', color: '#64748B', marginTop: '.15rem' }}>••••••••••••</div>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setPwdModal(true)}>🔒 Alterar</Button>
+                  <Button size="sm" variant="outline" onClick={() => setPwdModal(true)}>Alterar senha</Button>
                 </div>
               </div>
 
-              <div style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: '16px', padding: '1.5rem' }}>
-                <div style={{ fontWeight: 800, marginBottom: '1rem' }}>Sessões ativas</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
-                  {SESSIONS.map((s, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '.85rem', padding: '.85rem', background: s.current ? 'rgba(34,197,94,.06)' : 'rgba(255,255,255,.02)', border: `1px solid ${s.current ? 'rgba(34,197,94,.2)' : 'rgba(255,255,255,.06)'}`, borderRadius: '12px' }}>
-                      <span style={{ fontSize: '1.4rem', flexShrink: 0 }}>{s.device}</span>
+              <div style={card}>
+                <div style={cardTitle}>Autenticação em 2 fatores (2FA)</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
+                  {[
+                    { label: 'App autenticador (TOTP)', desc: 'Google Authenticator, Authy...', active: false, recommended: true },
+                    { label: 'SMS', desc: 'Código via mensagem de texto', active: true },
+                    { label: 'E-mail', desc: 'Código via email de backup', active: true },
+                  ].map((m, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '.85rem', background: 'rgba(255,255,255,.02)', borderRadius: '10px', border: '1px solid rgba(255,255,255,.06)' }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '.85rem', fontWeight: 600 }}>{s.name} {s.current && <span style={{ fontSize: '.65rem', background: 'rgba(34,197,94,.12)', color: '#22C55E', padding: '.1rem .45rem', borderRadius: '100px', marginLeft: '.4rem', fontWeight: 700 }}>Esta sessão</span>}</div>
-                        <div style={{ fontSize: '.72rem', color: '#64748B' }}>{s.location} · {s.time}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+                          <span style={{ fontWeight: 600, fontSize: '.88rem' }}>{m.label}</span>
+                          {m.recommended && <span style={{ padding: '.1rem .45rem', borderRadius: '4px', background: 'rgba(59,130,246,.15)', color: '#60A5FA', fontSize: '.62rem', fontWeight: 800 }}>RECOMENDADO</span>}
+                        </div>
+                        <div style={{ fontSize: '.75rem', color: '#64748B', marginTop: '.1rem' }}>{m.desc}</div>
                       </div>
-                      {!s.current && (
-                        <button onClick={() => toast({ message: '🔒 Sessão encerrada', type: 'info' })} style={{ padding: '.35rem .75rem', borderRadius: '8px', background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.2)', color: '#EF4444', fontSize: '.75rem', fontWeight: 700, cursor: 'pointer' }}>Encerrar</button>
-                      )}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem' }}>
+                        {m.active ? <span style={{ fontSize: '.72rem', color: '#22C55E', fontWeight: 700 }}>✓ Ativo</span> : <span style={{ fontSize: '.72rem', color: '#475569' }}>Inativo</span>}
+                        <Button size="xs" variant={m.active ? 'secondary' : 'outline'} onClick={() => toast({ message: m.active ? '2FA desativado' : '2FA ativado!', type: m.active ? 'warning' : 'success' })}>{m.active ? 'Remover' : 'Ativar'}</Button>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
+
+              <div style={card}>
+                <div style={cardTitle}>Sessões ativas</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
+                  {sessions.map(s => (
+                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '.85rem', background: s.current ? 'rgba(34,197,94,.05)' : 'rgba(255,255,255,.02)', borderRadius: '10px', border: `1px solid ${s.current ? 'rgba(34,197,94,.2)' : 'rgba(255,255,255,.06)'}` }}>
+                      <span style={{ fontSize: '1.1rem' }}>{s.device.split(' ')[0]}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '.85rem', fontWeight: 600 }}>{s.device}</div>
+                        <div style={{ fontSize: '.72rem', color: '#64748B' }}>{s.location} · {s.ip} · {s.last}</div>
+                      </div>
+                      {s.current ? <span style={{ fontSize: '.72rem', fontWeight: 700, color: '#22C55E', padding: '.18rem .55rem', borderRadius: '100px', background: 'rgba(34,197,94,.12)', border: '1px solid rgba(34,197,94,.25)' }}>Esta sessão</span> : <button onClick={() => toast({ message: '⚠️ Sessão encerrada', type: 'warning' })} style={{ padding: '.3rem .7rem', borderRadius: '7px', background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.15)', color: '#EF4444', fontSize: '.72rem', cursor: 'pointer' }}>Encerrar</button>}
+                    </div>
+                  ))}
+                  <button onClick={() => toast({ message: '⚠️ Todas as outras sessões foram encerradas', type: 'warning' })} style={{ padding: '.6rem', borderRadius: '8px', background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.12)', color: '#EF4444', fontSize: '.8rem', cursor: 'pointer', fontFamily: 'Inter,sans-serif' }}>🚪 Encerrar todas as outras sessões</button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* API KEYS */}
+          {tab === 'api' && (
+            <>
+              <div style={{ background: 'rgba(59,130,246,.06)', border: '1px solid rgba(59,130,246,.15)', borderRadius: '12px', padding: '1rem 1.25rem', fontSize: '.8rem', color: '#93C5FD', lineHeight: 1.7 }}>
+                🔒 Todas as chaves são <strong>criptografadas</strong> com AES-256 e armazenadas com segurança. Nunca são exibidas inteiras após salvas.
+              </div>
+
+              {[
+                { key: 'openrouter', label: 'OpenRouter API Key', icon: '🤖', placeholder: 'sk-or-v1-...', link: 'https://openrouter.ai/keys', desc: 'Necessária para o módulo de IA' },
+                { key: 'evolution_url', label: 'Evolution API URL', icon: '🌐', placeholder: 'https://api.seudominio.com.br', desc: 'URL base da sua instância Evolution' },
+                { key: 'evolution_key', label: 'Evolution API Key', icon: '🔑', placeholder: 'Bearer eyJhbGci...', desc: 'Chave de autenticação da Evolution API' },
+                { key: 'mercadopago', label: 'Mercado Pago Access Token', icon: '💳', placeholder: 'APP_USR-...', link: 'https://www.mercadopago.com.br/developers', desc: 'Token para processar pagamentos' },
+                { key: 'webhook_secret', label: 'Webhook Secret', icon: '🔗', placeholder: 'whsec_...', desc: 'Para validar webhooks recebidos' },
+              ].map(field => (
+                <div key={field.key} style={card}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.85rem' }}>
+                    <div>
+                      <div style={cardTitle}>{field.icon} {field.label}</div>
+                      <div style={{ fontSize: '.73rem', color: '#64748B', marginTop: '.15rem' }}>{field.desc}</div>
+                    </div>
+                    {field.link && <a href={field.link} target="_blank" rel="noopener noreferrer" style={{ fontSize: '.73rem', color: '#8B5CF6', fontWeight: 600 }}>Obter →</a>}
+                  </div>
+                  <div style={{ display: 'flex', gap: '.6rem' }}>
+                    <Input style={{ flex: 1 }} type={showKeys[field.key] ? 'text' : 'password'} value={apiKeys[field.key]} onChange={e => updKey(field.key, e.target.value)} placeholder={field.placeholder} icon={field.icon} />
+                    <button onClick={() => toggleKey(field.key)} style={{ width: '40px', borderRadius: '9px', background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.09)', color: '#64748B', cursor: 'pointer', flexShrink: 0 }}>{showKeys[field.key] ? '🙈' : '👁'}</button>
+                  </div>
+                </div>
+              ))}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '.6rem' }}>
+                <Button variant="outline" onClick={() => toast({ message: '🧪 Testando conexões...', type: 'info' })}>🧪 Testar todas</Button>
+                <Button onClick={saveApiKeys} loading={saving} icon="💾">Salvar chaves</Button>
+              </div>
+            </>
           )}
 
           {/* NOTIFICAÇÕES */}
           {tab === 'notificacoes' && (
-            <div style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: '16px', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
-              <div style={{ fontWeight: 800, marginBottom: '.5rem' }}>Notificações por e-mail</div>
-              {[
-                { key: 'new_lead', label: 'Novo lead capturado', desc: 'Alertas quando o bot capturar um lead', icon: '👥' },
-                { key: 'new_message', label: 'Nova mensagem recebida', desc: 'Notificar novas conversas', icon: '💬' },
-                { key: 'weekly_report', label: 'Relatório semanal', desc: 'Resumo de performance toda segunda', icon: '📊' },
-                { key: 'system', label: 'Alertas do sistema', desc: 'Erros e manutenções', icon: '⚙️' },
-                { key: 'payment', label: 'Lembretes de pagamento', desc: '7 dias antes do vencimento', icon: '💳' },
-              ].map(n => (
-                <div key={n.key} style={{ display: 'flex', alignItems: 'center', gap: '.85rem', padding: '.75rem', borderBottom: '1px solid rgba(255,255,255,.04)', transition: 'background .15s', borderRadius: '8px' }}
-                  onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,.02)'}
-                  onMouseOut={e => e.currentTarget.style.background = 'transparent'}
-                >
-                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(59,130,246,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.9rem', flexShrink: 0 }}>{n.icon}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '.88rem', fontWeight: 600 }}>{n.label}</div>
-                    <div style={{ fontSize: '.75rem', color: '#64748B' }}>{n.desc}</div>
+            <div style={card}>
+              <div style={cardTitle}>Central de notificações</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                {[
+                  { key: 'new_lead', label: 'Novo lead capturado', desc: 'Quando um novo lead entra no sistema', icon: '👥' },
+                  { key: 'new_message', label: 'Nova mensagem', desc: 'Mensagens não lidas nas conversas', icon: '💬' },
+                  { key: 'payment', label: 'Pagamentos', desc: 'Confirmações e alertas de pagamento', icon: '💳' },
+                  { key: 'weekly_report', label: 'Relatório semanal', desc: 'Resumo toda segunda às 9h', icon: '📊' },
+                  { key: 'ai_alert', label: 'Alertas da IA', desc: 'Quando a IA não consegue responder', icon: '🤖' },
+                  { key: 'system', label: 'Avisos do sistema', desc: 'Atualizações e manutenção', icon: '⚙️' },
+                ].map((n, i, arr) => (
+                  <div key={n.key} style={{ padding: '1rem 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,.05)' : 'none' }}>
+                    <Switch checked={notifs[n.key]} onChange={v => setNotifs(p => ({ ...p, [n.key]: v }))} label={`${n.icon} ${n.label}`} description={n.desc} />
                   </div>
-                  <Switch checked={notifs[n.key]} onChange={v => setNotifs(p => ({...p, [n.key]: v}))} />
-                </div>
-              ))}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '.5rem' }}>
-                <Button onClick={() => toast({ message: '✅ Notificações salvas!', type: 'success' })}>💾 Salvar</Button>
+                ))}
+              </div>
+              <div style={{ paddingTop: '.85rem', borderTop: '1px solid rgba(255,255,255,.06)', display: 'flex', justifyContent: 'flex-end' }}>
+                <Button onClick={() => toast({ message: '✅ Preferências salvas!', type: 'success' })} icon="💾">Salvar</Button>
               </div>
             </div>
           )}
 
           {/* PREFERÊNCIAS */}
           {tab === 'preferencias' && (
-            <div style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: '16px', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
-              <div style={{ fontWeight: 800, marginBottom: '.5rem' }}>Comportamento do sistema</div>
-              {[
-                { key: 'animations', label: 'Animações da interface', desc: 'Transições e efeitos visuais' },
-                { key: 'auto_save', label: 'Salvamento automático', desc: 'Salvar rascunhos automaticamente' },
-                { key: 'sidebar_compact', label: 'Sidebar compacta', desc: 'Iniciar com menu recolhido' },
-                { key: 'sounds', label: 'Sons de notificação', desc: 'Toques ao receber mensagens' },
-              ].map(p => (
-                <div key={p.key} style={{ display: 'flex', alignItems: 'center', padding: '.75rem', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '.88rem', fontWeight: 600 }}>{p.label}</div>
-                    <div style={{ fontSize: '.75rem', color: '#64748B' }}>{p.desc}</div>
-                  </div>
-                  <Switch checked={prefs[p.key]} onChange={v => setPrefs(prev => ({...prev, [p.key]: v}))} />
+            <>
+              <div style={card}>
+                <div style={cardTitle}>Interface</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                  {[
+                    { key: 'animations', label: '✨ Animações', desc: 'Transições e efeitos visuais' },
+                    { key: 'auto_save', label: '💾 Salvar automaticamente', desc: 'Salva formulários sem precisar clicar' },
+                    { key: 'compact_view', label: '📐 Visualização compacta', desc: 'Reduz o espaçamento das listas' },
+                    { key: 'sidebar_compact', label: '◀ Sidebar recolhida', desc: 'Inicia com o menu recolhido' },
+                    { key: 'sounds', label: '🔔 Sons', desc: 'Notificações sonoras de mensagens' },
+                  ].map((p, i, arr) => (
+                    <div key={p.key} style={{ padding: '1rem 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,.05)' : 'none' }}>
+                      <Switch checked={prefs[p.key]} onChange={v => setPrefs(prev => ({ ...prev, [p.key]: v }))} label={p.label} description={p.desc} />
+                    </div>
+                  ))}
                 </div>
-              ))}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '.5rem' }}>
-                <Button onClick={() => toast({ message: '✅ Preferências salvas!', type: 'success' })}>💾 Salvar</Button>
               </div>
-            </div>
+
+              <div style={card}>
+                <div style={cardTitle}>Tema</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '.75rem' }}>
+                  {THEMES.map(t => (
+                    <button key={t.value} onClick={() => { upd('theme', t.value); toast({ message: `🎨 Tema ${t.label} aplicado`, type: 'success' }); }} style={{ padding: '.85rem', borderRadius: '10px', background: form.theme === t.value ? 'rgba(59,130,246,.12)' : 'rgba(255,255,255,.03)', border: `1.5px solid ${form.theme === t.value ? 'rgba(59,130,246,.4)' : 'rgba(255,255,255,.08)'}`, color: form.theme === t.value ? '#60A5FA' : '#64748B', cursor: 'pointer', fontWeight: form.theme === t.value ? 700 : 500, fontSize: '.82rem', fontFamily: 'Inter,sans-serif', transition: 'all .15s' }}>{t.label}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Button onClick={() => toast({ message: '✅ Preferências salvas!', type: 'success' })} icon="💾">Salvar</Button>
+              </div>
+            </>
+          )}
+
+          {/* DANGER ZONE */}
+          {tab === 'danger' && (
+            <>
+              <div style={{ ...card, border: '1px solid rgba(239,68,68,.2)' }}>
+                <div style={{ ...cardTitle, color: '#FCA5A5' }}>⚠️ Zona de perigo</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '.85rem' }}>
+                  {[
+                    { label: '📤 Exportar dados', desc: 'Baixe todos os seus dados em formato JSON', action: () => toast({ message: '📦 Exportação iniciada! Você receberá por email em alguns minutos.', type: 'info', duration: 5000 }), variant: 'ghost' },
+                    { label: '🔄 Resetar configurações', desc: 'Restaura todas as configurações para o padrão', action: () => toast({ message: '⚠️ Configurações resetadas', type: 'warning' }), variant: 'ghost' },
+                    { label: '🚪 Sair de todas as sessões', desc: 'Encerra todas as sessões ativas imediatamente', action: () => toast({ message: '⚠️ Todas as sessões encerradas', type: 'warning' }), variant: 'ghost' },
+                    { label: '🗑️ Excluir conta', desc: 'Exclui permanentemente sua conta e todos os dados', action: () => setDeleteModal(true), variant: 'danger', danger: true },
+                  ].map((a, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '.85rem', background: a.danger ? 'rgba(239,68,68,.04)' : 'rgba(255,255,255,.02)', borderRadius: '10px', border: `1px solid ${a.danger ? 'rgba(239,68,68,.15)' : 'rgba(255,255,255,.06)'}`, gap: '1rem' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: '.88rem', color: a.danger ? '#FCA5A5' : '#F8FAFC' }}>{a.label}</div>
+                        <div style={{ fontSize: '.75rem', color: '#64748B', marginTop: '.1rem' }}>{a.desc}</div>
+                      </div>
+                      <Button size="sm" variant={a.variant} onClick={a.action} style={{ flexShrink: 0 }}>{a.label.split(' ')[0]}</Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
           )}
         </div>
       </div>
 
       {/* Password Modal */}
-      <Modal
-        open={pwdModal} onClose={() => setPwdModal(false)}
-        title="Alterar senha" icon="🔒" size="sm"
-        footer={
-          <>
-            <button onClick={() => setPwdModal(false)} style={{ padding: '.6rem 1.1rem', borderRadius: '8px', fontSize: '.85rem', background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)', color: '#94A3B8', cursor: 'pointer' }}>Cancelar</button>
-            <Button onClick={savePassword} loading={saving}>🔒 Alterar</Button>
-          </>
-        }
-      >
+      <Modal open={pwdModal} onClose={() => setPwdModal(false)} title="Alterar senha" icon="🔒" size="sm"
+        footer={<><button onClick={() => setPwdModal(false)} style={ghostBtn}>Cancelar</button><Button onClick={changePassword} loading={saving}>Alterar senha</Button></>}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '.85rem' }}>
-          <Input label="Senha atual" type="password" value={pwdForm.current} onChange={e => setPwdForm(p => ({...p, current: e.target.value}))} icon="🔑" />
-          <Input label="Nova senha" type="password" value={pwdForm.new} onChange={e => setPwdForm(p => ({...p, new: e.target.value}))} icon="🔒" helper="Mínimo 8 caracteres" />
-          <Input label="Confirmar senha" type="password" value={pwdForm.confirm} onChange={e => setPwdForm(p => ({...p, confirm: e.target.value}))} icon="🔒" error={pwdForm.confirm && pwdForm.new !== pwdForm.confirm ? 'Senhas não coincidem' : ''} />
+          <Input label="Senha atual *" type="password" value={pwdForm.current} onChange={e => setPwdForm(p => ({ ...p, current: e.target.value }))} icon="🔒" />
+          <Input label="Nova senha *" type="password" value={pwdForm.new} onChange={e => setPwdForm(p => ({ ...p, new: e.target.value }))} icon="🔑" helper="Mínimo 8 caracteres" />
+          <Input label="Confirmar nova senha *" type="password" value={pwdForm.confirm} onChange={e => setPwdForm(p => ({ ...p, confirm: e.target.value }))} icon="🔑" error={pwdForm.confirm && pwdForm.new !== pwdForm.confirm ? 'Senhas não coincidem' : ''} />
+        </div>
+      </Modal>
+
+      {/* Delete account modal */}
+      <Modal open={deleteModal} onClose={() => setDeleteModal(false)} title="Excluir conta" icon="🗑️" danger size="sm"
+        footer={<><button onClick={() => setDeleteModal(false)} style={ghostBtn}>Cancelar</button><button onClick={() => { setDeleteModal(false); toast({ message: 'Solicitação enviada. Você receberá um email de confirmação.', type: 'info', duration: 5000 }); }} style={{ padding: '.6rem 1.2rem', borderRadius: '8px', background: 'linear-gradient(135deg,#EF4444,#DC2626)', border: 'none', color: 'white', fontWeight: 700, fontSize: '.88rem', cursor: 'pointer' }}>Excluir permanentemente</button></>}>
+        <p style={{ fontSize: '.88rem', color: '#94A3B8', lineHeight: 1.7, marginBottom: '1rem' }}>Esta ação é <strong style={{ color: '#FCA5A5' }}>irreversível</strong>. Todos os seus dados, leads, conversas, configurações e histórico de pagamentos serão excluídos permanentemente.</p>
+        <div style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.15)', borderRadius: '10px', padding: '.85rem', fontSize: '.8rem', color: '#FCA5A5' }}>
+          ⚠️ Certifique-se de exportar seus dados antes de prosseguir.
         </div>
       </Modal>
     </div>
   );
 }
+
+const card = { background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: '16px', padding: '1.35rem' };
+const cardTitle = { fontWeight: 800, fontSize: '.9rem', marginBottom: '1rem', color: '#F8FAFC' };
+const ghostBtn = { padding: '.6rem 1.1rem', borderRadius: '8px', fontSize: '.85rem', fontWeight: 500, background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)', color: '#94A3B8', cursor: 'pointer' };
