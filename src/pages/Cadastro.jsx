@@ -47,20 +47,39 @@ export default function Cadastro() {
     // Step 3 — submit
     setLoading(true);
     try {
-      // Register the new user
-      await base44.auth.register({
+      // 1. Create the account
+      const regResponse = await base44.auth.register({
         email: form.email,
         password: form.password,
         full_name: form.full_name,
         company_name: form.company,
         phone: form.phone,
       });
-      // Auto-login after registration
+
+      // 2. If register returned a token, set it directly — no need to login again
+      const token = regResponse?.access_token || regResponse?.data?.access_token;
+      if (token) {
+        base44.auth.setToken(token);
+        toast({ message: '🎉 Conta criada! Bem-vindo ao GVP BOT!', type: 'success' });
+        navigate('/Dashboard');
+        return;
+      }
+
+      // 3. No token returned — do a regular login with the credentials
       await base44.auth.loginViaEmailPassword(form.email, form.password);
       toast({ message: '🎉 Conta criada! Bem-vindo ao GVP BOT!', type: 'success' });
-      setTimeout(() => navigate(createPageUrl('Dashboard')), 800);
+      navigate('/Dashboard');
+
     } catch (err) {
-      toast({ message: err.message || 'Erro ao criar conta', type: 'error' });
+      // Friendly error messages
+      const msg = err?.response?.data?.message || err?.message || '';
+      if (msg.toLowerCase().includes('already')) {
+        toast({ message: 'Este e-mail já está cadastrado. Tente fazer login.', type: 'error' });
+      } else if (msg.toLowerCase().includes('password')) {
+        toast({ message: 'Senha inválida. Use no mínimo 8 caracteres.', type: 'error' });
+      } else {
+        toast({ message: msg || 'Erro ao criar conta. Tente novamente.', type: 'error' });
+      }
     } finally {
       setLoading(false);
     }
