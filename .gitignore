@@ -1,5 +1,5 @@
 # Env & secrets
-.agents/.env
+.agents/
 .env
 .env.local
 .env.*.local
@@ -27,5 +27,6 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Zip files (build artifacts)
+# Zip files & old HTML version
 *.zip
+gvpbot/
