@@ -21,7 +21,7 @@ export default function Login() {
     }
     setLoading(true);
     try {
-      await base44.auth.signInWithEmailAndPassword(email, password);
+      await base44.auth.loginViaEmailPassword(email, password);
       navigate(createPageUrl('Dashboard'));
     } catch (err) {
       console.error('Login error:', err);
@@ -36,7 +36,7 @@ export default function Login() {
     setPassword('demo1234');
     setLoading(true);
     try {
-      await base44.auth.signInWithEmailAndPassword('demo@gvpbot.com.br', 'demo1234');
+      await base44.auth.loginViaEmailPassword('demo@gvpbot.com.br', 'demo1234');
       navigate(createPageUrl('Dashboard'));
     } catch (err) {
       // Demo creds might not exist — navigate anyway for preview
@@ -110,7 +110,7 @@ export default function Login() {
 
           <button
             type="button"
-            onClick={() => base44.auth.loginWithGoogle?.() || navigate(createPageUrl('Dashboard'))}
+            onClick={() => base44.auth.loginViaGoogle?.() || navigate(createPageUrl('Dashboard'))}
             style={{ width: '100%', padding: '.75rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,.1)', background: 'rgba(255,255,255,.04)', color: '#F8FAFC', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.6rem', fontSize: '.88rem', fontWeight: 600, fontFamily: 'Inter,sans-serif', transition: 'all .2s' }}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,.08)'}
             onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,.04)'}

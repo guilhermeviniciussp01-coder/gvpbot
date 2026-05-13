@@ -47,7 +47,16 @@ export default function Cadastro() {
     // Step 3 — submit
     setLoading(true);
     try {
-      await base44.auth.signUpWithEmailAndPassword(form.email, form.password, { full_name: form.full_name, company_name: form.company, phone: form.phone, plan: form.plan, niche: form.niche });
+      // Register the new user
+      await base44.auth.register({
+        email: form.email,
+        password: form.password,
+        full_name: form.full_name,
+        company_name: form.company,
+        phone: form.phone,
+      });
+      // Auto-login after registration
+      await base44.auth.loginViaEmailPassword(form.email, form.password);
       toast({ message: '🎉 Conta criada! Bem-vindo ao GVP BOT!', type: 'success' });
       setTimeout(() => navigate(createPageUrl('Dashboard')), 800);
     } catch (err) {
