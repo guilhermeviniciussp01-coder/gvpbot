@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { auth } from '@/api/base44Client';
+import { base44 } from '@/api/base44Client';
 import { Input, Select } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
@@ -47,7 +47,7 @@ export default function Cadastro() {
     // Step 3 — submit
     setLoading(true);
     try {
-      await auth.register({ email: form.email, password: form.password, full_name: form.full_name, company_name: form.company, phone: form.phone, plan: form.plan, niche: form.niche });
+      await base44.auth.signUpWithEmailAndPassword(form.email, form.password, { full_name: form.full_name, company_name: form.company, phone: form.phone, plan: form.plan, niche: form.niche });
       toast({ message: '🎉 Conta criada! Bem-vindo ao GVP BOT!', type: 'success' });
       setTimeout(() => navigate(createPageUrl('Dashboard')), 800);
     } catch (err) {
