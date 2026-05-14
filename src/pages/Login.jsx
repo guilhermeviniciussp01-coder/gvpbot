@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { signIn } from '@/api/supabaseClient';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
@@ -21,11 +21,18 @@ export default function Login() {
     }
     setLoading(true);
     try {
-      await base44.auth.loginViaEmailPassword(email, password);
+      await signIn(email.trim().toLowerCase(), password);
       navigate(createPageUrl('Dashboard'));
     } catch (err) {
       console.error('Login error:', err);
-      toast({ message: err?.message || 'Credenciais inválidas. Tente novamente.', type: 'error' });
+      const msg = (err?.message || '').toLowerCase();
+      if (msg.includes('invalid') || msg.includes('credentials') || msg.includes('password')) {
+        toast({ message: 'E-mail ou senha incorretos.', type: 'error' });
+      } else if (msg.includes('email') && msg.includes('confirm')) {
+        toast({ message: 'Confirme seu e-mail antes de entrar.', type: 'error' });
+      } else {
+        toast({ message: err?.message || 'Erro ao entrar. Tente novamente.', type: 'error' });
+      }
     } finally {
       setLoading(false);
     }
@@ -36,10 +43,9 @@ export default function Login() {
     setPassword('demo1234');
     setLoading(true);
     try {
-      await base44.auth.loginViaEmailPassword('demo@gvpbot.com.br', 'demo1234');
+      await signIn('demo@gvpbot.com.br', 'demo1234');
       navigate(createPageUrl('Dashboard'));
     } catch (err) {
-      // Demo creds might not exist — navigate anyway for preview
       console.warn('Demo login:', err?.message);
       navigate(createPageUrl('Dashboard'));
     } finally {
@@ -110,7 +116,7 @@ export default function Login() {
 
           <button
             type="button"
-            onClick={() => base44.auth.loginViaGoogle?.() || navigate(createPageUrl('Dashboard'))}
+            onClick={() => console.log('Google login: configure OAuth no Supabase') || navigate(createPageUrl('Dashboard'))}
             style={{ width: '100%', padding: '.75rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,.1)', background: 'rgba(255,255,255,.04)', color: '#F8FAFC', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.6rem', fontSize: '.88rem', fontWeight: 600, fontFamily: 'Inter,sans-serif', transition: 'all .2s' }}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,.08)'}
             onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,.04)'}
