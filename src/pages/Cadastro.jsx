@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
@@ -7,18 +7,28 @@ import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { NICHES } from '@/lib/utils';
 
-// Regex robusta — compatível com todos os formatos válidos comuns
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Única função de validação — usada em todos os pontos
+function validateEmail(email) {
+  const clean = email
+    .trim()
+    .replace(/\u200B/g, '')   // remove zero-width space
+    .replace(/\u00A0/g, ' ')  // substitui non-breaking space
+    .toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean);
+}
 
-function isValidEmail(raw) {
-  const email = (raw || '').trim().toLowerCase();
-  return EMAIL_REGEX.test(email);
+function cleanEmail(email) {
+  return email
+    .trim()
+    .replace(/\u200B/g, '')
+    .replace(/\u00A0/g, ' ')
+    .toLowerCase();
 }
 
 const STEPS = [
-  { num: 1, label: 'Sua conta', icon: '👤' },
+  { num: 1, label: 'Sua conta',   icon: '👤' },
   { num: 2, label: 'Seu negócio', icon: '🏢' },
-  { num: 3, label: 'Plano', icon: '🚀' },
+  { num: 3, label: 'Plano',       icon: '🚀' },
 ];
 
 const PLANS = [
@@ -45,84 +55,88 @@ export default function Cadastro() {
   const navigate              = useNavigate();
   const toast                 = useToast();
 
-  const [form, setForm] = useState({
+  // useRef para garantir valores sempre atualizados no submit (sem depender de closure assíncrona)
+  const formRef = useRef({
     full_name: '',
-    email: '',
-    password: '',
-    confirm: '',
-    company: '',
-    niche: '',
-    phone: '',
-    plan: 'trial',
+    email:     '',
+    password:  '',
+    confirm:   '',
+    company:   '',
+    niche:     '',
+    phone:     '',
+    plan:      'trial',
   });
 
-  // Normaliza e-mail ao digitar: trim + lowercase
-  const upd = (k, v) => {
-    const val = k === 'email' ? v.trimStart() : v;
-    setForm(p => ({ ...p, [k]: val }));
-  };
+  const [form, setForm] = useState(formRef.current);
+
+  function upd(k, v) {
+    formRef.current = { ...formRef.current, [k]: v };
+    setForm({ ...formRef.current });
+  }
+
+  // ── STEP 1 ──
+  function validateStep1() {
+    const name  = formRef.current.full_name.trim();
+    const email = cleanEmail(formRef.current.email);
+    const pwd   = formRef.current.password;
+    const conf  = formRef.current.confirm;
+
+    if (!name)                    { toast({ message: 'Informe seu nome completo.', type: 'error' }); return false; }
+    if (!email)                   { toast({ message: 'Informe seu e-mail.', type: 'error' }); return false; }
+    if (!validateEmail(email))    { toast({ message: 'Formato de e-mail inválido. Ex: nome@email.com', type: 'error' }); return false; }
+    if (!pwd || pwd.length < 8)   { toast({ message: 'Senha deve ter no mínimo 8 caracteres.', type: 'error' }); return false; }
+    if (pwd !== conf)             { toast({ message: 'As senhas não coincidem.', type: 'error' }); return false; }
+    return true;
+  }
+
+  // ── STEP 2 ──
+  function validateStep2() {
+    if (!formRef.current.company.trim()) { toast({ message: 'Informe o nome da sua empresa.', type: 'error' }); return false; }
+    if (!formRef.current.niche)          { toast({ message: 'Selecione o segmento do seu negócio.', type: 'error' }); return false; }
+    return true;
+  }
 
   async function nextStep() {
-    // ── STEP 1 validation ──
     if (step === 1) {
-      const trimmedName  = form.full_name.trim();
-      const trimmedEmail = form.email.trim().toLowerCase();
-      const pwd          = form.password;
-      const conf         = form.confirm;
-
-      if (!trimmedName) {
-        toast({ message: 'Informe seu nome completo.', type: 'error' }); return;
-      }
-      if (!trimmedEmail) {
-        toast({ message: 'Informe seu e-mail.', type: 'error' }); return;
-      }
-      if (!isValidEmail(trimmedEmail)) {
-        toast({ message: 'Formato de e-mail inválido. Ex: nome@email.com', type: 'error' }); return;
-      }
-      if (!pwd || pwd.length < 8) {
-        toast({ message: 'Senha deve ter no mínimo 8 caracteres.', type: 'error' }); return;
-      }
-      if (pwd !== conf) {
-        toast({ message: 'As senhas não coincidem.', type: 'error' }); return;
-      }
-
-      // Salva e-mail normalizado no estado antes de avançar
-      setForm(p => ({ ...p, email: trimmedEmail, full_name: trimmedName }));
+      if (!validateStep1()) return;
       setStep(2);
       return;
     }
 
-    // ── STEP 2 validation ──
     if (step === 2) {
-      if (!form.company.trim()) {
-        toast({ message: 'Informe o nome da sua empresa.', type: 'error' }); return;
-      }
-      if (!form.niche) {
-        toast({ message: 'Selecione o segmento do seu negócio.', type: 'error' }); return;
-      }
+      if (!validateStep2()) return;
       setStep(3);
       return;
     }
 
-    // ── STEP 3 — Submit ──
+    // ── STEP 3 — Submit — lê direto do ref, não do estado ──
+    const data = formRef.current;
+    const email    = cleanEmail(data.email);
+    const password = data.password;
+    const fullName = data.full_name.trim();
+    const company  = data.company.trim();
+    const phone    = data.phone.trim();
+
+    console.log('[Cadastro] Submetendo com email:', email);
+
     setLoading(true);
     try {
-      const email    = form.email.trim().toLowerCase();
-      const password = form.password;
-
       // 1. Cria a conta
       const regResponse = await base44.auth.register({
         email,
         password,
-        full_name:    form.full_name.trim(),
-        company_name: form.company.trim(),
-        phone:        form.phone.trim(),
+        full_name:    fullName,
+        company_name: company,
+        phone,
       });
 
-      // 2. Se a API retornou token direto, usa ele
+      console.log('[Cadastro] register response:', regResponse);
+
+      // 2. Checa se veio token na resposta
       const token = regResponse?.access_token
                  || regResponse?.data?.access_token
-                 || regResponse?.token;
+                 || regResponse?.token
+                 || regResponse?.data?.token;
 
       if (token) {
         base44.auth.setToken(token);
@@ -131,25 +145,34 @@ export default function Cadastro() {
         return;
       }
 
-      // 3. Sem token — loga com as credenciais recém-criadas
+      // 3. Sem token — loga automaticamente
       await base44.auth.loginViaEmailPassword(email, password);
       toast({ message: '🎉 Conta criada! Bem-vindo ao GVP BOT!', type: 'success' });
       navigate('/Dashboard');
 
     } catch (err) {
-      const raw = err?.response?.data?.message
-               || err?.response?.data?.error
-               || err?.message
-               || '';
-      const msg = raw.toLowerCase();
+      // Log completo para debug
+      console.error('[Cadastro] Erro completo:', err);
+      console.error('[Cadastro] err.response:', err?.response);
+      console.error('[Cadastro] err.response.data:', err?.response?.data);
 
-      if (msg.includes('already') || msg.includes('exist') || msg.includes('cadastrado')) {
+      // Pega a mensagem real do erro sem reinterpretar
+      const raw = (
+        err?.response?.data?.message ||
+        err?.response?.data?.error   ||
+        err?.response?.data?.detail  ||
+        err?.message                  ||
+        ''
+      ).trim();
+
+      const msgLower = raw.toLowerCase();
+
+      if (msgLower.includes('already') || msgLower.includes('exist') || msgLower.includes('duplicate')) {
         toast({ message: 'Este e-mail já está cadastrado. Faça login.', type: 'error' });
-      } else if (msg.includes('email') || msg.includes('invalid')) {
-        toast({ message: 'E-mail inválido. Verifique e tente novamente.', type: 'error' });
-      } else if (msg.includes('password') || msg.includes('senha')) {
+      } else if (msgLower.includes('password') && !msgLower.includes('email')) {
         toast({ message: 'Senha inválida. Use no mínimo 8 caracteres.', type: 'error' });
       } else {
+        // Mostra a mensagem real do backend — sem reinterpretar
         toast({ message: raw || 'Erro ao criar conta. Tente novamente.', type: 'error' });
       }
     } finally {
@@ -159,9 +182,13 @@ export default function Cadastro() {
 
   const progress = ((step - 1) / 2) * 100;
 
+  // Valida e-mail inline só depois que o usuário começou a digitar
+  const emailInlineError = form.email.length > 4 && !validateEmail(form.email)
+    ? 'Formato inválido. Ex: nome@email.com'
+    : '';
+
   return (
     <div style={{ minHeight: '100vh', background: '#030712', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter,sans-serif', color: '#F8FAFC', padding: '2rem 1rem', position: 'relative', overflow: 'hidden' }}>
-      {/* Orbs */}
       {[
         { top: '-200px', left: '-150px', c: 'rgba(59,130,246,.12)' },
         { bottom: '-100px', right: '-100px', c: 'rgba(139,92,246,.1)' },
@@ -176,20 +203,12 @@ export default function Cadastro() {
           GVP<span style={{ color: '#3B82F6' }}>BOT</span>
         </Link>
 
-        {/* Progress bar */}
+        {/* Progress */}
         <div style={{ marginBottom: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
             {STEPS.map(s => (
               <div key={s.num} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '.4rem', flex: 1 }}>
-                <div style={{
-                  width: '36px', height: '36px', borderRadius: '50%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: step > s.num ? '1rem' : '.88rem', fontWeight: 700,
-                  background: step >= s.num ? 'linear-gradient(135deg,#3B82F6,#8B5CF6)' : 'rgba(255,255,255,.06)',
-                  border: `2px solid ${step >= s.num ? 'rgba(59,130,246,.5)' : 'rgba(255,255,255,.1)'}`,
-                  transition: 'all .3s',
-                  boxShadow: step >= s.num ? '0 0 16px rgba(59,130,246,.3)' : 'none',
-                }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: step > s.num ? '1rem' : '.88rem', fontWeight: 700, background: step >= s.num ? 'linear-gradient(135deg,#3B82F6,#8B5CF6)' : 'rgba(255,255,255,.06)', border: `2px solid ${step >= s.num ? 'rgba(59,130,246,.5)' : 'rgba(255,255,255,.1)'}`, transition: 'all .3s', boxShadow: step >= s.num ? '0 0 16px rgba(59,130,246,.3)' : 'none' }}>
                   {step > s.num ? '✓' : s.icon}
                 </div>
                 <span style={{ fontSize: '.72rem', fontWeight: 600, color: step >= s.num ? '#93C5FD' : '#475569' }}>{s.label}</span>
@@ -204,23 +223,21 @@ export default function Cadastro() {
         {/* Card */}
         <div style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.08)', borderRadius: '20px', padding: '2rem' }}>
 
-          {/* ── Step 1 ── */}
+          {/* Step 1 */}
           {step === 1 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ marginBottom: '.5rem' }}>
                 <h2 style={{ fontSize: '1.35rem', fontWeight: 900, letterSpacing: '-.5px', marginBottom: '.3rem' }}>Crie sua conta</h2>
                 <p style={{ color: '#64748B', fontSize: '.88rem' }}>Teste grátis por 7 dias, sem cartão</p>
               </div>
-
               <Input
                 label="Nome completo *"
+                type="text"
                 value={form.full_name}
                 onChange={e => upd('full_name', e.target.value)}
                 placeholder="Seu nome"
                 icon="👤"
               />
-
-              {/* E-mail — type="text" para evitar validação nativa do browser */}
               <Input
                 label="E-mail *"
                 type="text"
@@ -230,9 +247,8 @@ export default function Cadastro() {
                 onChange={e => upd('email', e.target.value)}
                 placeholder="seu@email.com"
                 icon="✉️"
-                error={form.email && !isValidEmail(form.email) ? 'Formato inválido. Ex: nome@email.com' : ''}
+                error={emailInlineError}
               />
-
               <Input
                 label="Senha *"
                 type="password"
@@ -254,7 +270,7 @@ export default function Cadastro() {
             </div>
           )}
 
-          {/* ── Step 2 ── */}
+          {/* Step 2 */}
           {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ marginBottom: '.5rem' }}>
@@ -285,7 +301,7 @@ export default function Cadastro() {
             </div>
           )}
 
-          {/* ── Step 3 ── */}
+          {/* Step 3 */}
           {step === 3 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ marginBottom: '.5rem' }}>
@@ -296,28 +312,16 @@ export default function Cadastro() {
                 <div
                   key={plan.id}
                   onClick={() => upd('plan', plan.id)}
-                  style={{
-                    background: form.plan === plan.id ? `linear-gradient(135deg,${plan.color}18,${plan.color}08)` : 'rgba(255,255,255,.03)',
-                    border: `1.5px solid ${form.plan === plan.id ? `${plan.color}50` : 'rgba(255,255,255,.08)'}`,
-                    borderRadius: '14px', padding: '1rem', cursor: 'pointer',
-                    transition: 'all .2s', display: 'flex', alignItems: 'center',
-                    gap: '.85rem', position: 'relative',
-                  }}
+                  style={{ background: form.plan === plan.id ? `linear-gradient(135deg,${plan.color}18,${plan.color}08)` : 'rgba(255,255,255,.03)', border: `1.5px solid ${form.plan === plan.id ? `${plan.color}50` : 'rgba(255,255,255,.08)'}`, borderRadius: '14px', padding: '1rem', cursor: 'pointer', transition: 'all .2s', display: 'flex', alignItems: 'center', gap: '.85rem', position: 'relative' }}
                 >
                   {plan.popular && (
-                    <div style={{ position: 'absolute', top: '-8px', right: '10px', background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', borderRadius: '100px', padding: '.15rem .6rem', fontSize: '.62rem', fontWeight: 800, color: 'white' }}>
-                      🔥 Popular
-                    </div>
+                    <div style={{ position: 'absolute', top: '-8px', right: '10px', background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', borderRadius: '100px', padding: '.15rem .6rem', fontSize: '.62rem', fontWeight: 800, color: 'white' }}>🔥 Popular</div>
                   )}
-                  <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `${plan.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>
-                    {plan.icon}
-                  </div>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `${plan.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>{plan.icon}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.25rem' }}>
                       <span style={{ fontWeight: 800, fontSize: '.92rem' }}>{plan.name}</span>
-                      <span style={{ fontWeight: 900, fontSize: '1rem', background: `linear-gradient(135deg,${plan.color},${plan.color}88)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                        {plan.price}<span style={{ fontSize: '.7rem', color: '#64748B', WebkitTextFillColor: '#64748B' }}> {plan.period}</span>
-                      </span>
+                      <span style={{ fontWeight: 900, fontSize: '1rem', color: plan.color }}>{plan.price}<span style={{ fontSize: '.7rem', color: '#64748B' }}> {plan.period}</span></span>
                     </div>
                     <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap' }}>
                       {plan.features.slice(0, 3).map(f => (
@@ -326,19 +330,19 @@ export default function Cadastro() {
                     </div>
                   </div>
                   {form.plan === plan.id && (
-                    <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: `linear-gradient(135deg,${plan.color},${plan.color}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.65rem', color: 'white', flexShrink: 0 }}>✓</div>
+                    <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: plan.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.65rem', color: 'white', flexShrink: 0 }}>✓</div>
                   )}
                 </div>
               ))}
 
-              {/* Resumo */}
+              {/* Resumo — lê do formRef para garantir valores atuais */}
               <div style={{ background: 'rgba(59,130,246,.06)', border: '1px solid rgba(59,130,246,.15)', borderRadius: '12px', padding: '1rem', marginTop: '.25rem' }}>
-                <div style={{ fontSize: '.78rem', color: '#64748B', marginBottom: '.5rem' }}>Resumo do cadastro</div>
+                <div style={{ fontSize: '.78rem', color: '#64748B', marginBottom: '.5rem', fontWeight: 600 }}>📋 Resumo do cadastro</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '.3rem' }}>
                   {[
-                    { l: 'Nome', v: form.full_name },
-                    { l: 'E-mail', v: form.email },
-                    { l: 'Empresa', v: form.company },
+                    { l: 'Nome',    v: formRef.current.full_name },
+                    { l: 'E-mail',  v: cleanEmail(formRef.current.email) },
+                    { l: 'Empresa', v: formRef.current.company },
                   ].map(r => (
                     <div key={r.l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '.8rem' }}>
                       <span style={{ color: '#64748B' }}>{r.l}</span>
@@ -350,7 +354,7 @@ export default function Cadastro() {
             </div>
           )}
 
-          {/* ── Footer buttons ── */}
+          {/* Footer */}
           <div style={{ display: 'flex', gap: '.75rem', marginTop: '1.5rem' }}>
             {step > 1 && (
               <button
@@ -371,7 +375,6 @@ export default function Cadastro() {
           </div>
         </div>
 
-        {/* Login link */}
         <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '.85rem', color: '#64748B' }}>
           Já tem conta?{' '}
           <Link to={createPageUrl('Login')} style={{ color: '#3B82F6', textDecoration: 'none', fontWeight: 700 }}>
