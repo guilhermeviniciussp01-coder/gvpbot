@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { signUp, signIn } from '@/api/supabaseClient';
+import { signUp, signIn, signOut } from '@/api/supabaseClient';
 import { Input, Select } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
@@ -93,7 +93,8 @@ export default function Cadastro() {
     setLoading(true);
 
     try {
-      // ── 1. Cria conta no Supabase ──────────────────────────────────────────
+      await signOut();
+   
       const { user, session } = await signUp({
         email,
         password,
