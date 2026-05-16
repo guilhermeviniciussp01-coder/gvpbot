@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { signIn } from '@/api/supabaseClient';
+import { signIn, signOut } from '@/api/supabaseClient';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
@@ -13,43 +13,39 @@ export default function Login() {
   const navigate = useNavigate();
   const toast    = useToast();
 
-  async function handleLogin(e) {
-    e.preventDefault();
-    if (!email || !password) {
-      toast({ message: 'Preencha todos os campos', type: 'error' });
-      return;
-    }
-    setLoading(true);
-    try {
-      await signIn(email.trim().toLowerCase(), password);
-      navigate(createPageUrl('Dashboard'));
-    } catch (err) {
-      console.error('Login error:', err);
-      const msg = (err?.message || '').toLowerCase();
-      if (msg.includes('invalid') || msg.includes('credentials') || msg.includes('password')) {
-        toast({ message: 'E-mail ou senha incorretos.', type: 'error' });
-      } else if (msg.includes('email') && msg.includes('confirm')) {
-        toast({ message: 'Confirme seu e-mail antes de entrar.', type: 'error' });
-      } else {
-        toast({ message: err?.message || 'Erro ao entrar. Tente novamente.', type: 'error' });
-      }
-    } finally {
-      setLoading(false);
-    }
+async function handleLogin(e) {
+  e.preventDefault();
+
+  if (!email || !password) {
+    toast({ message: 'Preencha todos os campos', type: 'error' });
+    return;
   }
 
-async function handleDemoLogin() {
-  setEmail('demo@gvpbot.com.br');
-  setPassword('demo1234');
   setLoading(true);
 
   try {
+    await signOut();
+    await signIn(email.trim().toLowerCase(), password);
+    navigate(createPageUrl('Dashboard'));
+  } catch (err) {
+    toast({
+      message: 'E-mail ou senha incorretos.',
+      type: 'error'
+    });
+  } finally {
+    setLoading(false);
+  }
+}
+async function handleDemoLogin() {
+  setLoading(true);
+
+  try {
+    await signOut();
     await signIn('demo@gvpbot.com.br', 'demo1234');
     navigate(createPageUrl('Dashboard'));
   } catch (err) {
-    console.warn('Demo login:', err?.message);
     toast({
-      message: 'Erro no login demo',
+      message: 'Conta demo não configurada',
       type: 'error'
     });
   } finally {
