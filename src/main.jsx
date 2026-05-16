@@ -75,7 +75,10 @@ css.textContent = `
   }
 `;
 document.head.appendChild(css);
-
+// Limpa sessão do Base44
+Object.keys(localStorage).forEach(k => {
+  if (k.includes('base44')) localStorage.removeItem(k);
+});
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
