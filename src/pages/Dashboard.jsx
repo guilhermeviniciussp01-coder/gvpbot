@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Lead, Conversation, Metric } from '@/api/entities';
+
 import { generateMockMetrics, generateSparkData, formatNumber, formatCurrency, formatRelative, getInitials, getAvatarColor } from '@/lib/utils';
 import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton';
 import { Link } from 'react-router-dom';
