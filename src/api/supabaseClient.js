@@ -10,7 +10,7 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     autoRefreshToken:    true,
-   persistSession: false,
+  persistSession: true,
     detectSessionInUrl:  true,
     storageKey:          'gvpbot_session',
   },
