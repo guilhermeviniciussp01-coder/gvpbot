@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { signIn, signOut } from '@/api/supabaseClient';
+import { signOut } from '@/api/supabaseClient';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
@@ -37,20 +37,9 @@ async function handleLogin(e) {
   }
 }
 async function handleDemoLogin() {
-  setLoading(true);
-
-  try {
-    await signOut();
-    await signIn('demo@gvpbot.com.br', 'demo1234');
-    navigate(createPageUrl('Dashboard'));
-  } catch (err) {
-    toast({
-      message: 'Conta demo não configurada',
-      type: 'error'
-    });
-  } finally {
-    setLoading(false);
-  }
+  localStorage.clear();
+  sessionStorage.clear();
+  navigate(createPageUrl('Dashboard'));
 }
   return (
     <div style={{ minHeight: '100vh', background: '#030712', display: 'flex', fontFamily: 'Inter,sans-serif', color: '#F8FAFC', position: 'relative', overflow: 'hidden' }}>
