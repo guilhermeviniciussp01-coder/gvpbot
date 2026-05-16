@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { auth } from '@/api/base44Client';
+import { supabase } from '@/supabaseClient';
 import { TrialBanner, PastDueBanner } from '@/components/ui/AccessGate';
 
 /* ── Navigation config ── */
@@ -82,21 +82,19 @@ export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const W = collapsed ? '66px' : '234px';
 
-  useEffect(() => {
-    auth.me()
-      .then(setUser)
-      .catch(() => {
-        // Fallback demo user so the layout always renders
-        setUser({
-          full_name: 'Guilherme Vinicius',
-          email: 'guilherme@gvpbot.com.br',
-          plan: 'pro',
-          plan_status: 'active',
-          is_admin: true,
-        });
+ useEffect(() => {
+  supabase.auth.getUser().then(({ data }) => {
+    if (data?.user) {
+      setUser({
+        full_name: data.user.user_metadata?.full_name || data.user.email,
+        email: data.user.email,
+        plan: data.user.user_metadata?.plano || 'trial',
+        plan_status: 'active',
+        is_admin: false,
       });
-  }, []);
-
+    }
+  });
+}, []);
   /* Close mobile drawer on route change */
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
