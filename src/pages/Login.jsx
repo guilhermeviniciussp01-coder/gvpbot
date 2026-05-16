@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { signOut } from '@/api/supabaseClient';
+import { signIn, signOut } from '@/api/supabaseClient';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
@@ -25,7 +25,11 @@ async function handleLogin(e) {
 
   try {
     await signOut();
+    localStorage.clear();
+    sessionStorage.clear();
+
     await signIn(email.trim().toLowerCase(), password);
+
     navigate(createPageUrl('Dashboard'));
   } catch (err) {
     toast({
@@ -36,11 +40,14 @@ async function handleLogin(e) {
     setLoading(false);
   }
 }
+
 async function handleDemoLogin() {
+  await signOut();
   localStorage.clear();
   sessionStorage.clear();
   navigate(createPageUrl('Dashboard'));
 }
+ 
   return (
     <div style={{ minHeight: '100vh', background: '#030712', display: 'flex', fontFamily: 'Inter,sans-serif', color: '#F8FAFC', position: 'relative', overflow: 'hidden' }}>
       {/* Orbs */}
