@@ -38,21 +38,24 @@ export default function Login() {
     }
   }
 
-  async function handleDemoLogin() {
-    setEmail('demo@gvpbot.com.br');
-    setPassword('demo1234');
-    setLoading(true);
-    try {
-      await signIn('demo@gvpbot.com.br', 'demo1234');
-      navigate(createPageUrl('Dashboard'));
-    } catch (err) {
-      console.warn('Demo login:', err?.message);
-      navigate(createPageUrl('Dashboard'));
-    } finally {
-      setLoading(false);
-    }
-  }
+async function handleDemoLogin() {
+  setEmail('demo@gvpbot.com.br');
+  setPassword('demo1234');
+  setLoading(true);
 
+  try {
+    await signIn('demo@gvpbot.com.br', 'demo1234');
+    navigate(createPageUrl('Dashboard'));
+  } catch (err) {
+    console.warn('Demo login:', err?.message);
+    toast({
+      message: 'Erro no login demo',
+      type: 'error'
+    });
+  } finally {
+    setLoading(false);
+  }
+}
   return (
     <div style={{ minHeight: '100vh', background: '#030712', display: 'flex', fontFamily: 'Inter,sans-serif', color: '#F8FAFC', position: 'relative', overflow: 'hidden' }}>
       {/* Orbs */}
