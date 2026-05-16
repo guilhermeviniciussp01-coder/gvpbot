@@ -64,41 +64,32 @@ export default function Dashboard() {
   useEffect(() => {
     loadData();
   }, [period]);
+async function loadData() {
+  setLoading(true);
 
-  async function loadData() {
-    setLoading(true);
-    try {
-      const [leadsData, convData] = await Promise.all([
-        Lead.list({ limit: 5, sort: '-created_date' }),
-        Conversation.list({ limit: 8, sort: '-last_message_at' }),
-      ]);
-      setLeads(leadsData);
-      setConversations(convData);
+  try {
+    const mockMetrics = generateMockMetrics();
+    const days = period === '7d' ? 7 : period === '30d' ? 30 : 14;
 
-      const mockMetrics = generateMockMetrics();
-      const days = period === '7d' ? 7 : period === '30d' ? 30 : 14;
-      setMetrics(mockMetrics.slice(-days));
+    setMetrics(mockMetrics.slice(-days));
 
-      const todayMetric = mockMetrics[mockMetrics.length - 1];
-      const newKpis = {
-        conversations: todayMetric.conversations_count + leadsData.length * 2,
-        leads: todayMetric.leads_count + leadsData.length,
-        conversion: todayMetric.conversion_rate,
-        response_time: todayMetric.avg_response_time,
-      };
-      setKpis(newKpis);
-      animateKpis(newKpis);
-    } catch(e) {
-      // Use pure mock if no data
-      const mockMetrics = generateMockMetrics();
-      setMetrics(mockMetrics.slice(-7));
-      const newKpis = { conversations: 1247, leads: 89, conversion: 34.2, response_time: 0.4 };
-      setKpis(newKpis);
-      animateKpis(newKpis);
-    } finally {
-      setLoading(false);
-    }
+    const newKpis = {
+      conversations: 1247,
+      leads: 89,
+      conversion: 34.2,
+      response_time: 0.4
+    };
+
+    setKpis(newKpis);
+    animateKpis(newKpis);
+
+  } catch (e) {
+    console.error(e);
+  } finally {
+    setLoading(false);
   }
+}
+ 
 
   function animateKpis(target) {
     const duration = 1400;
