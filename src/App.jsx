@@ -3,7 +3,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { ToastProvider } from '@/components/ui/Toast';
 import Layout from '@/components/layout/Layout';
 import { Spinner } from '@/components/ui/Button';
-import { supabase } from '@/supabaseClient';
+import { supabase } from '@/api/supabaseClient';
 
 // Public pages
 import LandingPage   from '@/pages/LandingPage';
