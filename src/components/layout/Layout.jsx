@@ -106,10 +106,10 @@ export default function Layout({ children, currentPageName }) {
     );
   }
 
-  async function logout() {
-    try { await auth.logout(); } catch {}
-    window.location.href = '/';
-  }
+ async function logout() {
+  await supabase.auth.signOut();
+  window.location.href = '/';
+}
 
   const planC = PLAN_COLORS[user?.plan] || PLAN_COLORS.trial;
   const initials = (user?.full_name || user?.email || '?').split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase();
