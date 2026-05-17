@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { signUp } from '@/supabaseClient';
+import { signUp } from '@/api/supabaseClient';
 
 const STEPS = [
   { num: 1, label: 'Sua conta', icon: '👤' },
