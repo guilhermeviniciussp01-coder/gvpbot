@@ -82,18 +82,21 @@ export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const W = collapsed ? '66px' : '234px';
 
- useEffect(() => {
-  supabase.auth.getUser().then(({ data }) => {
-    if (data?.user) {
+useEffect(() => {
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    if (session?.user) {
       setUser({
-        full_name: data.user.user_metadata?.full_name || data.user.email,
-        email: data.user.email,
-        plan: data.user.user_metadata?.plano || 'trial',
+        full_name: session.user.user_metadata?.full_name || session.user.email,
+        email: session.user.email,
+        plan: session.user.user_metadata?.plano || 'trial',
         plan_status: 'active',
         is_admin: false,
       });
+    } else {
+      setUser(null);
     }
   });
+  return () => subscription.unsubscribe();
 }, []);
   /* Close mobile drawer on route change */
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
