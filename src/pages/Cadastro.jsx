@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { signUp } from '@/api/supabaseClient';
+import { signUp, signIn } from '@/api/supabaseClient';
 const STEPS = [
   { num: 1, label: 'Sua conta', icon: '👤' },
   { num: 2, label: 'Seu negócio', icon: '🏢' },
@@ -55,7 +55,7 @@ export default function Cadastro() {
     if (step < 3) { setStep(p => p + 1); return; }
 
     setLoading(true);
-    try {
+   try {
       await signUp({
         email: form.email,
         password: form.password,
@@ -63,8 +63,12 @@ export default function Cadastro() {
         company_name: form.company,
         phone: form.phone,
       });
+
+      // Faz login automático com a conta nova
+      await signIn(form.email, form.password);
+
       showToast('🎉 Conta criada! Bem-vindo ao GVP BOT!', 'success');
-     setTimeout(() => navigate('/Login'), 1000);
+      setTimeout(() => navigate('/Dashboard'), 1000);
     } catch (err) {
       const msg = err?.message || '';
       if (msg.includes('already registered') || msg.includes('already exists')) {
