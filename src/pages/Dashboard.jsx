@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-
+import { supabase } from '@/api/supabaseClient';
 import { generateMockMetrics, generateSparkData, formatNumber, formatCurrency, formatRelative, getInitials, getAvatarColor } from '@/lib/utils';
 import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton';
 import { Link } from 'react-router-dom';
@@ -54,13 +54,23 @@ const KPI_CONFIGS = [
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
+  const [userName, setUserName] = useState('');
   const [metrics, setMetrics] = useState([]);
   const [leads, setLeads] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [kpis, setKpis] = useState({ conversations: 0, leads: 0, conversion: 0, response_time: 0 });
   const [animatedKpis, setAnimatedKpis] = useState({ conversations: 0, leads: 0, conversion: 0, response_time: 0 });
   const [period, setPeriod] = useState('7d');
-
+useEffect(() => {
+  async function getUserProfile() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user && user.user_metadata?.full_name) {
+      const firstName = user.user_metadata.full_name.split(' ')[0];
+      setUserName(firstName);
+    }
+  }
+  getUserProfile();
+}, []);
   useEffect(() => {
     loadData();
   }, [period]);
@@ -138,7 +148,9 @@ async function loadData() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 900, letterSpacing: '-.5px', marginBottom: '.2rem' }}>Dashboard</h2>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 900, letterSpacing: '-.5px', marginBottom: '.2rem' }}>
+  {userName ? `Olá, ${userName} 👋` : 'Dashboard'}
+</h2>
           <p style={{ fontSize: '.85rem', color: '#64748B' }}>Visão geral do seu atendimento em tempo real</p>
         </div>
         <div style={{ display: 'flex', gap: '.5rem' }}>
