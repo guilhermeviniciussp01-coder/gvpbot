@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { signIn } from '@/supabaseClient';
-import { supabase } from '@/supabaseClient';
+import { signIn, supabase } from '@/api/supabaseClient';
 const inp = { width: '100%', padding: '.72rem 1rem', borderRadius: '10px', background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', color: '#F8FAFC', fontSize: '.9rem', fontFamily: 'Inter,sans-serif', outline: 'none', boxSizing: 'border-box' };
 
 export default function Login() {
