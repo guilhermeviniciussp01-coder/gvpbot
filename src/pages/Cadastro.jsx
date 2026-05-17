@@ -65,7 +65,7 @@ export default function Cadastro() {
         phone: form.phone,
       });
       showToast('🎉 Conta criada! Bem-vindo ao GVP BOT!', 'success');
-      setTimeout(() => navigate('/Dashboard'), 1000);
+     setTimeout(() => navigate('/Login'), 1000);
     } catch (err) {
       const msg = err?.message || '';
       if (msg.includes('already registered') || msg.includes('already exists')) {
