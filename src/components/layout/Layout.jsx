@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { supabase } from '@/supabaseClient';
+import { supabase } from '@/api/supabaseClient';
 import { TrialBanner, PastDueBanner } from '@/components/ui/AccessGate';
 
 /* ── Navigation config ── */
@@ -83,10 +83,24 @@ export default function Layout({ children, currentPageName }) {
   const W = collapsed ? '66px' : '234px';
 
 useEffect(() => {
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+  const fetchSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
       setUser({
-        full_name: session.user.user_metadata?.full_name || session.user.email,
+        full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0],
+        email: session.user.email,
+        plan: session.user.user_metadata?.plano || 'trial',
+        plan_status: 'active',
+        is_admin: false,
+      });
+    }
+  };
+  fetchSession();
+
+  const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    if (session?.user) {
+      setUser({
+        full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0],
         email: session.user.email,
         plan: session.user.user_metadata?.plano || 'trial',
         plan_status: 'active',
@@ -96,7 +110,8 @@ useEffect(() => {
       setUser(null);
     }
   });
-  return () => subscription.unsubscribe();
+
+  return () => authListener?.subscription?.unsubscribe();
 }, []);
   /* Close mobile drawer on route change */
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
