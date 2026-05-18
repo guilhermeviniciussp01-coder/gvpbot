@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { auth } from '@/api/base44Client';
+import { supabase } from '@/api/supabaseClient';
 import { Button } from '@/components/ui/Button';
 import { Input, Textarea, Switch, Select } from '@/components/ui/Input';
 import { useToast } from '@/components/ui/Toast';
@@ -44,11 +44,17 @@ export default function Configuracoes() {
   const updKey = (k, v) => setApiKeys(p => ({ ...p, [k]: v }));
 
   useEffect(() => {
-    auth.me().then(u => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      const u = {
+        full_name:    user.user_metadata?.full_name    || user.user_metadata?.name || user.email?.split('@')[0] || '',
+        email:        user.email || '',
+        phone:        user.user_metadata?.phone        || '',
+        company_name: user.user_metadata?.company_name || '',
+        timezone:     user.user_metadata?.timezone     || 'America/Sao_Paulo',
+      };
       setUser(u);
-      setForm(p => ({ ...p, full_name: u?.full_name || 'Guilherme Vinicius', email: u?.email || 'guilherme@gvpbot.com.br', phone: u?.phone || '(11) 9 9999-9999', company_name: u?.company_name || 'GVP BOT', timezone: u?.timezone || 'America/Sao_Paulo' }));
-    }).catch(() => {
-      setForm(p => ({ ...p, full_name: 'Guilherme Vinicius', email: 'guilherme@gvpbot.com.br', phone: '(11) 9 9999-9999', company_name: 'GVP BOT' }));
+      setForm(p => ({ ...p, ...u }));
     });
   }, []);
 
@@ -354,3 +360,4 @@ export default function Configuracoes() {
 const card = { background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: '16px', padding: '1.35rem' };
 const cardTitle = { fontWeight: 800, fontSize: '.9rem', marginBottom: '1rem', color: '#F8FAFC' };
 const ghostBtn = { padding: '.6rem 1.1rem', borderRadius: '8px', fontSize: '.85rem', fontWeight: 500, background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)', color: '#94A3B8', cursor: 'pointer' };
+
