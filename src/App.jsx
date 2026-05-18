@@ -34,20 +34,30 @@ function AppLoader() {
 
 // ── Rota protegida — redireciona para login se não estiver logado ──
 function ProtectedRoute({ Page, name }) {
-  const [session, setSession] = useState(undefined);
+  // undefined = carregando, null = não logado, objeto = logado
+  const [user, setUser] = useState(undefined);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
+    // getUser() vai ao SERVIDOR — garante usuário real, sem cache
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user ?? null);
     });
-    const { data: listener } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s);
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
+      // Quando muda sessão, busca usuário real do servidor
+      if (session?.user) {
+        supabase.auth.getUser().then(({ data: { user } }) => {
+          setUser(user ?? null);
+        });
+      } else {
+        setUser(null);
+      }
     });
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  if (session === undefined) return <AppLoader />;
-  if (!session) return <Navigate to="/Login" replace />;
+  if (user === undefined) return <AppLoader />;
+  if (!user) return <Navigate to="/Login" replace />;
 
   return (
     <Layout currentPageName={name}>
@@ -102,3 +112,4 @@ export default function App() {
     </ToastProvider>
   );
 }
+
