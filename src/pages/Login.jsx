@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { signIn, supabase } from '@/api/supabaseClient';
 const inp = { width: '100%', padding: '.72rem 1rem', borderRadius: '10px', background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', color: '#F8FAFC', fontSize: '.9rem', fontFamily: 'Inter,sans-serif', outline: 'none', boxSizing: 'border-box' };
 
@@ -8,8 +8,6 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading]   = useState(false);
   const [toast, setToast]       = useState(null);
-  const navigate = useNavigate();
-
   function showToast(message, type = 'error') {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
@@ -20,10 +18,10 @@ export default function Login() {
     if (!email || !password) { showToast('Preencha todos os campos'); return; }
     setLoading(true);
   try {
-  await supabase.auth.signOut(); // limpa sessão antiga
-  await signIn(email.trim().toLowerCase(), password);
-  navigate('/Dashboard');
-    } catch (err) {
+    await supabase.auth.signOut(); // limpa sessão antiga
+    await signIn(email.trim().toLowerCase(), password);
+    window.location.href = '/Dashboard'; // força reload completo para limpar estado
+  } catch (err) {
       showToast('E-mail ou senha incorretos.');
     } finally {
       setLoading(false);
@@ -113,3 +111,4 @@ export default function Login() {
     </div>
   );
 }
+
