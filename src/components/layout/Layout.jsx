@@ -1,3 +1,4 @@
+SHA: 7c55c8727b103add1a406447e02a9990a1ad89e3
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -86,25 +87,31 @@ useEffect(() => {
   function buildUser(u) {
     if (!u) return null;
     return {
-      full_name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0],
-      email: u.email,
+      full_name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0] || '',
+      email: u.email || '',
       plan: u.user_metadata?.plano || 'trial',
       plan_status: 'active',
       is_admin: false,
     };
   }
 
-  // Carrega sessão inicial
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    setUser(buildUser(session?.user ?? null));
+  // getUser() vai ao SERVIDOR — nunca usa cache local
+  // Isso garante que sempre lemos o usuário atual de verdade
+  supabase.auth.getUser().then(({ data: { user } }) => {
+    setUser(buildUser(user ?? null));
   });
 
-  // Escuta QUALQUER mudança de auth (login, logout, troca de conta)
+  // onAuthStateChange captura qualquer troca de sessão
   const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-    // Sempre reseta antes de setar o novo usuário para garantir re-render
-    setUser(null);
+    if (event === 'SIGNED_OUT') {
+      setUser(null);
+      return;
+    }
+    // Para SIGNED_IN e TOKEN_REFRESHED: busca do servidor para garantir dados frescos
     if (session?.user) {
-      setUser(buildUser(session.user));
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        setUser(buildUser(user ?? null));
+      });
     }
   });
 
@@ -375,4 +382,5 @@ const sectionLabel = {
   letterSpacing: '1.2px', color: '#2D3F56',
   padding: '.35rem .82rem .15rem', marginTop: '.4rem',
 };
+
 
