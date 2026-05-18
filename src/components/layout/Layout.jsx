@@ -83,31 +83,28 @@ export default function Layout({ children, currentPageName }) {
   const W = collapsed ? '66px' : '234px';
 
 useEffect(() => {
-  const fetchSession = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      setUser({
-        full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0],
-        email: session.user.email,
-        plan: session.user.user_metadata?.plano || 'trial',
-        plan_status: 'active',
-        is_admin: false,
-      });
-    }
-  };
-  fetchSession();
+  function buildUser(u) {
+    if (!u) return null;
+    return {
+      full_name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0],
+      email: u.email,
+      plan: u.user_metadata?.plano || 'trial',
+      plan_status: 'active',
+      is_admin: false,
+    };
+  }
 
-  const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+  // Carrega sessão inicial
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    setUser(buildUser(session?.user ?? null));
+  });
+
+  // Escuta QUALQUER mudança de auth (login, logout, troca de conta)
+  const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    // Sempre reseta antes de setar o novo usuário para garantir re-render
+    setUser(null);
     if (session?.user) {
-      setUser({
-        full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0],
-        email: session.user.email,
-        plan: session.user.user_metadata?.plano || 'trial',
-        plan_status: 'active',
-        is_admin: false,
-      });
-    } else {
-      setUser(null);
+      setUser(buildUser(session.user));
     }
   });
 
@@ -378,3 +375,4 @@ const sectionLabel = {
   letterSpacing: '1.2px', color: '#2D3F56',
   padding: '.35rem .82rem .15rem', marginTop: '.4rem',
 };
+
