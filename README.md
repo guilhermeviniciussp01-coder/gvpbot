@@ -1,144 +1,112 @@
-# 🤖 GVP BOT
+# GVP BOT — Setup Guide
 
-> SaaS de automação para WhatsApp e Instagram com Inteligência Artificial
-
-[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)](https://react.dev)
-[![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=flat-square&logo=vite)](https://vitejs.dev)
-[![Base44](https://img.shields.io/badge/Base44-SDK-3B82F6?style=flat-square)](https://base44.com)
-
----
-
-## ✨ Funcionalidades
-
-| Módulo | Descrição |
-|--------|-----------|
-| 📊 **Dashboard** | KPIs em tempo real, gráficos sparkline, conversas e leads recentes |
-| 🟢 **WhatsApp** | Conecte instâncias via Evolution API, QR code, log de eventos |
-| 💬 **Chat** | Inbox unificado WhatsApp + Instagram com respostas manuais |
-| 🤖 **IA** | OpenRouter GPT-4o/Claude, playground interativo, delay humanizado |
-| 🔀 **Automações** | Visual flow builder estilo ManyChat, canvas drag-and-drop |
-| 👥 **Leads** | Captura automática, tags, histórico de conversas |
-| 🎯 **CRM** | Kanban com drag-and-drop, pipeline de vendas |
-| 📈 **Analytics** | Gráficos SVG interativos, exportação CSV, filtro por período |
-| 💳 **Planos** | Checkout com Cartão/PIX/Boleto, integração Mercado Pago |
-| ⚙️ **Configurações** | Perfil, segurança, API keys, notificações, preferências |
-| 🛡️ **Admin** | Painel oculto com gestão de usuários, pagamentos e sistema |
-
----
-
-## 🚀 Stack
-
-- **Frontend:** React 18 + Vite
-- **Backend/DB:** Base44 SDK (entities, auth, storage)
-- **WhatsApp:** Evolution API
-- **IA:** OpenRouter (GPT-4o, Claude, Gemini, Llama)
-- **Pagamentos:** Mercado Pago (PIX, Cartão, Boleto)
-- **Design:** Dark mode, glassmorphism, neon blue/purple
-
----
-
-## 🛠️ Instalação
-
-```bash
-# Clone o repositório
-git clone https://github.com/guilhermeviniciussp01-coder/gvpbot.git
-cd gvpbot
-
-# Instale as dependências
-npm install
-
-# Configure as variáveis de ambiente
-cp .env.example .env
-# Edite o .env com suas chaves
-
-# Inicie o servidor de desenvolvimento
-npm run dev
-```
-
----
-
-## 🔑 Variáveis de Ambiente
-
-```env
-VITE_PUBLIC_APP_ID=seu_app_id_base44
-
-# Configuradas dentro do painel (Configurações > API Keys):
-# - OpenRouter API Key
-# - Evolution API URL + Key
-# - Mercado Pago Access Token
-# - Webhook Secret
-```
-
----
-
-## 📁 Estrutura
+## 1. Variáveis de Ambiente (Vercel)
 
 ```
-src/
-├── api/
-│   ├── base44Client.js     # SDK client
-│   └── entities.js         # Todas as entidades do banco
-├── components/
-│   ├── layout/
-│   │   └── Layout.jsx      # Sidebar + Topbar
-│   └── ui/
-│       ├── AccessGate.jsx  # Trial/PayDue banners
-│       ├── Button.jsx
-│       ├── Input.jsx       # Input, Select, Textarea, Switch
-│       ├── Modal.jsx       # Modal + ConfirmModal
-│       ├── Skeleton.jsx
-│       └── Toast.jsx
-├── lib/
-│   └── utils.js            # Helpers (format, mock data, etc.)
-├── pages/
-│   ├── Admin.jsx
-│   ├── Analytics.jsx
-│   ├── Automacoes.jsx      # Visual flow builder
-│   ├── Cadastro.jsx        # Signup 3 steps
-│   ├── Chat.jsx
-│   ├── CRM.jsx             # Kanban
-│   ├── Configuracoes.jsx   # 6-tab settings
-│   ├── Dashboard.jsx
-│   ├── IA.jsx              # OpenRouter + Playground
-│   ├── LandingPage.jsx
-│   ├── Leads.jsx
-│   ├── Login.jsx
-│   ├── Planos.jsx          # Checkout MP
-│   └── WhatsApp.jsx        # Evolution API
-├── App.jsx
-├── main.jsx                # SEO + global CSS
-└── utils.js
+VITE_SUPABASE_URL=https://ypeqnvmaenlnlxmotbrr.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJ...
+VITE_MP_ACCESS_TOKEN=APP_USR-...   ← Mercado Pago Access Token (produção)
+VITE_APP_URL=https://gvpbot.vercel.app
 ```
 
----
+## 2. Banco de Dados Supabase
 
-## 🏗️ Entidades (Banco de Dados)
+Execute o SQL abaixo no **SQL Editor** do Supabase (https://supabase.com/dashboard → seu projeto → SQL Editor):
 
-| Entidade | Campos principais |
-|----------|-------------------|
-| `Lead` | name, phone, email, status, tags, value |
-| `Conversation` | lead_id, channel, status, last_message |
-| `Message` | conversation_id, sender, content, type |
-| `WhatsappInstance` | evolution_api_url, status, qr_code |
-| `AiSettings` | openrouter_api_key, model, system_prompt |
-| `Automation` | trigger_type, nodes, edges, status |
-| `Plan` | name, price_monthly, price_annual, features |
-| `Subscription` | user_id, plan_id, status, trial_end |
-| `Payment` | amount, method, status, mercadopago_id |
+```sql
+-- TABELA: user_configs
+CREATE TABLE IF NOT EXISTS public.user_configs (
+  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id         uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
+  openrouter_key  text,
+  ai_model        text DEFAULT 'mistralai/mistral-7b-instruct:free',
+  system_prompt   text,
+  ai_enabled      boolean DEFAULT true,
+  temperature     numeric DEFAULT 0.7,
+  timezone        text DEFAULT 'America/Sao_Paulo',
+  theme           text DEFAULT 'dark',
+  notifications   jsonb DEFAULT '{}',
+  created_at      timestamptz DEFAULT now(),
+  updated_at      timestamptz DEFAULT now()
+);
+ALTER TABLE public.user_configs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "user_configs_own" ON public.user_configs
+  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
----
+-- TABELA: subscriptions
+CREATE TABLE IF NOT EXISTS public.subscriptions (
+  id            uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id       uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  plan_id       text NOT NULL,
+  payment_id    text,
+  amount        numeric,
+  status        text DEFAULT 'pending',
+  expires_at    timestamptz,
+  created_at    timestamptz DEFAULT now(),
+  updated_at    timestamptz DEFAULT now()
+);
+ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "subscriptions_own" ON public.subscriptions
+  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
-## 📸 Design
+-- TABELA: whatsapp_instances
+CREATE TABLE IF NOT EXISTS public.whatsapp_instances (
+  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id         uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  name            text NOT NULL,
+  evolution_url   text,
+  evolution_key   text,
+  instance_name   text,
+  status          text DEFAULT 'disconnected',
+  phone_number    text,
+  created_at      timestamptz DEFAULT now(),
+  updated_at      timestamptz DEFAULT now()
+);
+ALTER TABLE public.whatsapp_instances ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "whatsapp_instances_own" ON public.whatsapp_instances
+  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
-- **Background:** `#070C18`
-- **Primary:** `#3B82F6` (blue)
-- **Secondary:** `#8B5CF6` (purple)
-- **Success:** `#22C55E` (green)
-- **Font:** Inter
-- **Style:** Dark mode, glassmorphism, neon accents
+-- TABELA: messages
+CREATE TABLE IF NOT EXISTS public.messages (
+  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id         uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  instance_id     uuid REFERENCES public.whatsapp_instances(id) ON DELETE CASCADE,
+  from_number     text,
+  to_number       text,
+  body            text,
+  direction       text DEFAULT 'in',
+  status          text DEFAULT 'received',
+  created_at      timestamptz DEFAULT now()
+);
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "messages_own" ON public.messages
+  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
----
+-- TRIGGERS updated_at
+CREATE OR REPLACE FUNCTION public.set_updated_at()
+RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ LANGUAGE plpgsql;
 
-## 📄 Licença
+CREATE OR REPLACE TRIGGER user_configs_updated_at BEFORE UPDATE ON public.user_configs FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE OR REPLACE TRIGGER subscriptions_updated_at BEFORE UPDATE ON public.subscriptions FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE OR REPLACE TRIGGER whatsapp_instances_updated_at BEFORE UPDATE ON public.whatsapp_instances FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+```
 
-MIT © 2026 GVP BOT
+## 3. Mercado Pago
+
+1. Crie uma conta em mercadopago.com.br
+2. Vá em Seu negócio → Credenciais
+3. Copie o **Access Token de produção**
+4. Adicione como `VITE_MP_ACCESS_TOKEN` no Vercel
+
+## 4. OpenRouter (IA)
+
+1. Crie conta em openrouter.ai
+2. Vá em Keys e crie uma API Key
+3. Configure na página IA do painel (salva no Supabase por usuário)
+4. Modelos gratuitos disponíveis: Mistral 7B, Llama 3, Phi-3, Gemma 3
+
+## 5. Evolution API (WhatsApp)
+
+1. Instale ou use um servidor Evolution API
+2. Configure URL e API Key na página WhatsApp do painel
+3. Clique em Conectar para gerar o QR Code
