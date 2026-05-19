@@ -25,6 +25,7 @@ import {
   X,
   Sparkles,
   Phone,
+  FileText,
 } from 'lucide-react';
 
 /* Navigation config with Lucide icons */
@@ -37,6 +38,7 @@ const NAV_MAIN = [
   { label: 'Leads',       Icon: Users,           path: 'Leads' },
   { label: 'CRM',         Icon: Target,          path: 'CRM' },
   { label: 'Analytics',   Icon: BarChart3,       path: 'Analytics' },
+  { label: 'Logs',        Icon: FileText,        path: 'Logs' },
 ];
 
 const NAV_SYSTEM = [
