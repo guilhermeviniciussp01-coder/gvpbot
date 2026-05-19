@@ -1,8 +1,33 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  
+  --color-background: #0a0a0f;
+  --color-foreground: #f8fafc;
+  
+  --color-primary: #3b82f6;
+  --color-secondary: #8b5cf6;
+  --color-accent: #22c55e;
+  --color-destructive: #ef4444;
+  
+  --color-muted: #1e293b;
+  --color-muted-foreground: #94a3b8;
+  
+  --color-border: rgba(255, 255, 255, 0.05);
+  --color-input: rgba(255, 255, 255, 0.05);
+  --color-ring: #3b82f6;
+  
+  --color-card: rgba(255, 255, 255, 0.02);
+  --color-card-foreground: #f8fafc;
+  
+  --radius-lg: 1rem;
+  --radius-md: 0.75rem;
+  --radius-sm: 0.5rem;
+}
 
 /* Base Styles */
 @layer base {
@@ -17,9 +42,9 @@
   }
   
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #0a0a0f;
-    color: #f8fafc;
+    font-family: var(--font-sans);
+    background: var(--color-background);
+    color: var(--color-foreground);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
