@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase, getUser, getWhatsappInstances, saveWhatsappInstance, deleteWhatsappInstance } from '@/api/supabaseClient';
-import { useToast } from '@/components/ui/Toast';
+import { useToast, addNotification } from '@/components/ui/Toast';
 
 /* ── Status Badge ── */
 function StatusBadge({ status }) {
@@ -84,6 +84,69 @@ function ConfigModal({ open, onClose, instance, onSave }) {
   );
 }
 
+
+/* ── Modal: enviar mensagem de teste ── */
+function SendTestModal({ open, onClose, instance }) {
+  const toast = useToast();
+  const [phone, setPhone]   = useState('');
+  const [msg, setMsg]       = useState('Olá! Esta é uma mensagem de teste do GVP BOT 🤖');
+  const [sending, setSending] = useState(false);
+
+  if (!open) return null;
+  const inp = { width: '100%', padding: '.65rem .9rem', borderRadius: '8px', background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', color: '#F8FAFC', fontSize: '.85rem', outline: 'none', boxSizing: 'border-box', fontFamily: 'Inter,sans-serif' };
+
+  async function sendTest() {
+    if (!phone.replace(/\D/g,'')) { toast({ message: '⚠️ Digite um número válido', type: 'warning' }); return; }
+    if (!instance?.evolution_url || !instance?.evolution_key) { toast({ message: '⚠️ Configure a Evolution API primeiro', type: 'warning' }); return; }
+    setSending(true);
+    try {
+      const number = phone.replace(/\D/g, '');
+      const res = await fetch(`${instance.evolution_url}/message/sendText/${instance.instance_name}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': instance.evolution_key },
+        body: JSON.stringify({ number: `${number}@s.whatsapp.net`, textMessage: { text: msg } }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Erro ao enviar');
+      toast({ message: `✅ Mensagem enviada para ${phone}!`, type: 'success' });
+      addNotification({ icon: '💬', title: 'Mensagem de teste enviada', body: `Para: ${phone}`, type: 'success' });
+      onClose();
+    } catch (err) {
+      toast({ message: `❌ ${err.message}`, type: 'error' });
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.75)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+      <div style={{ background: '#0F1629', border: '1px solid rgba(255,255,255,.1)', borderRadius: '16px', padding: '1.75rem', width: '100%', maxWidth: '440px' }}>
+        <div style={{ fontWeight: 800, fontSize: '1rem', marginBottom: '1.25rem' }}>💬 Enviar mensagem de teste</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '.85rem' }}>
+          <div>
+            <label style={{ fontSize: '.78rem', color: '#94A3B8', display: 'block', marginBottom: '.3rem' }}>Número de destino (com DDD)</label>
+            <input style={inp} value={phone} onChange={e => setPhone(e.target.value)} placeholder="11999999999" type="tel" />
+            <div style={{ fontSize: '.7rem', color: '#475569', marginTop: '.3rem' }}>Apenas números, sem + ou espaços</div>
+          </div>
+          <div>
+            <label style={{ fontSize: '.78rem', color: '#94A3B8', display: 'block', marginBottom: '.3rem' }}>Mensagem</label>
+            <textarea style={{ ...inp, resize: 'vertical', lineHeight: 1.55 }} rows={3} value={msg} onChange={e => setMsg(e.target.value)} />
+          </div>
+          <div style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.15)', borderRadius: '8px', padding: '.7rem', fontSize: '.78rem', color: '#86EFAC' }}>
+            📌 Instância: <strong>{instance?.instance_name}</strong> · O WhatsApp deve estar conectado
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '.75rem', marginTop: '1.25rem', justifyContent: 'flex-end' }}>
+          <button onClick={onClose} style={{ padding: '.6rem 1.2rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,.1)', background: 'transparent', color: '#94A3B8', cursor: 'pointer', fontSize: '.85rem' }}>Cancelar</button>
+          <button onClick={sendTest} disabled={sending} style={{ padding: '.6rem 1.4rem', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg,#22C55E,#16A34A)', color: 'white', cursor: 'pointer', fontWeight: 700, fontSize: '.85rem', opacity: sending ? .7 : 1 }}>
+            {sending ? '⏳ Enviando...' : '📤 Enviar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function WhatsApp() {
   const toast = useToast();
   const [instances, setInstances]     = useState([]);
@@ -91,6 +154,8 @@ export default function WhatsApp() {
   const [configModal, setConfigModal] = useState(false);
   const [editInstance, setEditInstance] = useState(null);
   const [connecting, setConnecting]   = useState({});
+  const [sendModal, setSendModal]     = useState(false);
+  const [sendTarget, setSendTarget]   = useState(null);
   const [qrCodes, setQrCodes]         = useState({});
   const [statuses, setStatuses]       = useState({});
   const pollRefs = useRef({});
@@ -171,6 +236,7 @@ export default function WhatsApp() {
             clearInterval(pollRefs.current[inst.id]);
             setQrCodes(p => ({ ...p, [inst.id]: null }));
             toast({ message: `✅ ${inst.name} conectado com sucesso!`, type: 'success' });
+            addNotification({ icon: '📱', title: 'WhatsApp conectado', body: inst.name, type: 'success' });
           }
         }, 3000);
 
@@ -282,6 +348,9 @@ export default function WhatsApp() {
                         🔄 Verificar
                       </button>
                     )}
+                    {statuses[inst.id] === 'connected' && (
+                      <button onClick={() => { setSendTarget(inst); setSendModal(true); }} style={{ padding: '.5rem .9rem', borderRadius: '8px', border: '1px solid rgba(34,197,94,.25)', background: 'rgba(34,197,94,.07)', color: '#4ADE80', cursor: 'pointer', fontSize: '.82rem' }}>💬 Teste</button>
+                    )}
                     <button onClick={() => { setEditInstance(inst); setConfigModal(true); }} style={{ padding: '.5rem .9rem', borderRadius: '8px', border: `1px solid ${border}`, background: 'transparent', color: '#94A3B8', cursor: 'pointer', fontSize: '.82rem' }}>⚙️</button>
                     <button onClick={() => handleDelete(inst.id)} style={{ padding: '.5rem .9rem', borderRadius: '8px', border: '1px solid rgba(239,68,68,.2)', background: 'transparent', color: '#EF4444', cursor: 'pointer', fontSize: '.82rem' }}>🗑️</button>
                   </div>
@@ -313,6 +382,11 @@ export default function WhatsApp() {
         </div>
       )}
 
+      <SendTestModal
+        open={sendModal}
+        onClose={() => { setSendModal(false); setSendTarget(null); }}
+        instance={sendTarget}
+      />
       <ConfigModal
         open={configModal}
         onClose={() => { setConfigModal(false); setEditInstance(null); }}
@@ -322,3 +396,4 @@ export default function WhatsApp() {
     </div>
   );
 }
+
