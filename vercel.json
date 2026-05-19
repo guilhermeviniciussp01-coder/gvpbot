@@ -4,8 +4,10 @@
   "installCommand": "npm install",
   "framework": "vite",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)",     "destination": "/index.html" }
+    { "source": "/api/whatsapp-webhook", "destination": "/api/whatsapp-webhook" },
+    { "source": "/api/ai-proxy",         "destination": "/api/ai-proxy" },
+    { "source": "/api/(.*)",             "destination": "/api/$1" },
+    { "source": "/(.*)",                 "destination": "/index.html" }
   ],
   "headers": [
     {
@@ -15,11 +17,20 @@
       ]
     },
     {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin",  "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization, x-webhook-token" }
+      ]
+    },
+    {
       "source": "/(.*)",
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "X-Frame-Options",        "value": "SAMEORIGIN" },
-        { "key": "X-XSS-Protection",       "value": "1; mode=block" }
+        { "key": "X-XSS-Protection",       "value": "1; mode=block" },
+        { "key": "Referrer-Policy",        "value": "strict-origin-when-cross-origin" }
       ]
     }
   ]
