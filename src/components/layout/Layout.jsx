@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { supabase } from '@/api/supabaseClient';
 import { TrialBanner, PastDueBanner } from '@/components/ui/AccessGate';
+import { NotificationBell } from '@/components/ui/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -386,10 +387,7 @@ export default function Layout({ children, currentPageName }) {
             </div>
 
             {/* Notifications */}
-            <button className="relative p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all">
-              <Bell className="w-4 h-4 text-slate-400" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-[#0d0d12]" />
-            </button>
+            <NotificationBell />
 
             {/* Avatar (mobile) */}
             {user && (
@@ -431,3 +429,4 @@ export default function Layout({ children, currentPageName }) {
     </div>
   );
 }
+
