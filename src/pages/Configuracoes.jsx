@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/api/supabaseClient';
+import { supabase, getUserSubscription } from '@/api/supabaseClient';
 import { Button } from '@/components/ui/Button';
 import { Input, Textarea, Switch, Select } from '@/components/ui/Input';
 import { useToast } from '@/components/ui/Toast';
@@ -40,6 +40,10 @@ export default function Configuracoes() {
     { id: 's3', device: '💻 Firefox · macOS', location: 'Rio de Janeiro, BR', ip: '201.x.x.3', last: 'Ontem 18:30', current: false },
   ]);
 
+  const [subscription, setSubscription]   = useState(null);
+  const [cancelModal, setCancelModal]     = useState(false);
+  const [cancelling, setCancelling]       = useState(false);
+
   const upd = (k, v) => setForm(p => ({ ...p, [k]: v }));
   const updKey = (k, v) => setApiKeys(p => ({ ...p, [k]: v }));
 
@@ -77,6 +81,29 @@ export default function Configuracoes() {
     toast({ message: '🔒 Senha alterada!', type: 'success' });
   }
 
+  async function cancelarAssinatura() {
+    if (!subscription) return;
+    setCancelling(true);
+    try {
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+        .eq('id', subscription.id);
+      if (error) throw error;
+
+      // Atualizar user_metadata — volta para trial
+      await supabase.auth.updateUser({ data: { plano: 'trial' } });
+
+      setSubscription(prev => ({ ...prev, status: 'cancelled' }));
+      setCancelModal(false);
+      toast({ message: '✅ Assinatura cancelada. Acesso mantido até o fim do período.', type: 'success' });
+    } catch (err) {
+      toast({ message: `❌ Erro: ${err.message}`, type: 'error' });
+    } finally {
+      setCancelling(false);
+    }
+  }
+
   async function saveApiKeys() {
     setSaving(true);
     await new Promise(r => setTimeout(r, 800));
@@ -91,6 +118,7 @@ export default function Configuracoes() {
   const TABS = [
     { id: 'perfil', label: '👤 Perfil', icon: '👤' },
     { id: 'seguranca', label: '🔒 Segurança', icon: '🔒' },
+    { id: 'assinatura', label: '💳 Assinatura', icon: '💳' },
     { id: 'api', label: '🔑 API Keys', icon: '🔑' },
     { id: 'notificacoes', label: '🔔 Notificações', icon: '🔔' },
     { id: 'preferencias', label: '⚙️ Preferências', icon: '⚙️' },
@@ -209,6 +237,74 @@ export default function Configuracoes() {
                   ))}
                   <button onClick={() => toast({ message: '⚠️ Todas as outras sessões foram encerradas', type: 'warning' })} style={{ padding: '.6rem', borderRadius: '8px', background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.12)', color: '#EF4444', fontSize: '.8rem', cursor: 'pointer', fontFamily: 'Inter,sans-serif' }}>🚪 Encerrar todas as outras sessões</button>
                 </div>
+              </div>
+            </>
+          )}
+
+          {/* ASSINATURA */}
+          {tab === 'assinatura' && (
+            <>
+              {/* Card do plano atual */}
+              <div style={card}>
+                <div style={cardTitle}>💳 Plano atual</div>
+                {!subscription || subscription.status === 'cancelled' || subscription.status === 'expired' ? (
+                  <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '.75rem' }}>🌱</div>
+                    <div style={{ fontWeight: 700, marginBottom: '.4rem' }}>Você está no plano Trial</div>
+                    <div style={{ color: '#64748B', fontSize: '.85rem', marginBottom: '1.25rem' }}>Faça upgrade para desbloquear todos os recursos</div>
+                    <button onClick={() => window.location.href = '/Planos'} style={{ padding: '.65rem 1.5rem', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', color: 'white', cursor: 'pointer', fontWeight: 700, fontSize: '.88rem' }}>
+                      Ver planos →
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    {/* Info do plano */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: 'rgba(59,130,246,.06)', border: '1px solid rgba(59,130,246,.15)', borderRadius: '12px', marginBottom: '1rem', flexWrap: 'wrap', gap: '.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '.85rem' }}>
+                        <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>
+                          {subscription.plan_id === 'starter' ? '🌱' : subscription.plan_id === 'pro' ? '🚀' : '💎'}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: '1rem', textTransform: 'capitalize' }}>{subscription.plan_id}</div>
+                          <div style={{ fontSize: '.75rem', color: '#64748B', marginTop: '.1rem' }}>
+                            R$ {Number(subscription.amount || 0).toFixed(2).replace('.', ',')}/mês
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '.3rem', padding: '.25rem .75rem', borderRadius: '100px', background: 'rgba(34,197,94,.1)', color: '#22C55E', fontSize: '.75rem', fontWeight: 700 }}>
+                          <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#22C55E', display: 'inline-block' }} /> Ativo
+                        </span>
+                        {subscription.expires_at && (
+                          <div style={{ fontSize: '.72rem', color: '#64748B', marginTop: '.3rem' }}>
+                            Renova em {new Date(subscription.expires_at).toLocaleDateString('pt-BR')}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Ações */}
+                    <div style={{ display: 'flex', gap: '.75rem', flexWrap: 'wrap' }}>
+                      <button onClick={() => window.location.href = '/Planos'} style={{ padding: '.6rem 1.2rem', borderRadius: '9px', border: '1px solid rgba(59,130,246,.3)', background: 'rgba(59,130,246,.08)', color: '#60A5FA', cursor: 'pointer', fontWeight: 600, fontSize: '.83rem' }}>
+                        ⬆️ Fazer upgrade
+                      </button>
+                      <button onClick={() => window.location.href = '/Planos?tab=historico'} style={{ padding: '.6rem 1.2rem', borderRadius: '9px', border: '1px solid rgba(255,255,255,.1)', background: 'transparent', color: '#94A3B8', cursor: 'pointer', fontWeight: 600, fontSize: '.83rem' }}>
+                        🧾 Ver histórico
+                      </button>
+                      <button
+                        onClick={() => setCancelModal(true)}
+                        style={{ padding: '.6rem 1.2rem', borderRadius: '9px', border: '1px solid rgba(239,68,68,.25)', background: 'rgba(239,68,68,.06)', color: '#FCA5A5', cursor: 'pointer', fontWeight: 600, fontSize: '.83rem', marginLeft: 'auto' }}
+                      >
+                        🚫 Cancelar assinatura
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Info de cancelamento */}
+              <div style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.15)', borderRadius: '12px', padding: '1rem 1.25rem', fontSize: '.82rem', color: '#94A3B8', lineHeight: 1.65 }}>
+                ℹ️ Ao cancelar, você mantém o acesso até o fim do período já pago. Não há reembolso proporcional. Você pode reativar a qualquer momento.
               </div>
             </>
           )}
@@ -335,6 +431,28 @@ export default function Configuracoes() {
         </div>
       </div>
 
+      {/* Cancel Modal */}
+      {cancelModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.75)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div style={{ background: '#0F1629', border: '1px solid rgba(239,68,68,.25)', borderRadius: '16px', padding: '2rem', width: '100%', maxWidth: '440px', textAlign: 'center' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>⚠️</div>
+            <div style={{ fontWeight: 800, fontSize: '1.1rem', marginBottom: '.5rem', color: '#FCA5A5' }}>Cancelar assinatura?</div>
+            <div style={{ color: '#64748B', fontSize: '.88rem', marginBottom: '1.75rem', lineHeight: 1.6 }}>
+              Seu acesso continua ativo até <strong style={{ color: '#F8FAFC' }}>{subscription?.expires_at ? new Date(subscription.expires_at).toLocaleDateString('pt-BR') : 'o fim do período'}</strong>.
+              Depois disso, você voltará para o plano gratuito.
+            </div>
+            <div style={{ display: 'flex', gap: '.75rem', justifyContent: 'center' }}>
+              <button onClick={() => setCancelModal(false)} style={{ padding: '.65rem 1.4rem', borderRadius: '9px', border: '1px solid rgba(255,255,255,.1)', background: 'transparent', color: '#94A3B8', cursor: 'pointer', fontWeight: 600 }}>
+                Manter plano
+              </button>
+              <button onClick={cancelarAssinatura} disabled={cancelling} style={{ padding: '.65rem 1.4rem', borderRadius: '9px', border: 'none', background: 'rgba(239,68,68,.15)', color: '#FCA5A5', cursor: 'pointer', fontWeight: 700, border: '1px solid rgba(239,68,68,.3)', opacity: cancelling ? .7 : 1 }}>
+                {cancelling ? '⏳ Cancelando...' : '🚫 Confirmar cancelamento'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Password Modal */}
       <Modal open={pwdModal} onClose={() => setPwdModal(false)} title="Alterar senha" icon="🔒" size="sm"
         footer={<><button onClick={() => setPwdModal(false)} style={ghostBtn}>Cancelar</button><Button onClick={changePassword} loading={saving}>Alterar senha</Button></>}>
@@ -360,4 +478,5 @@ export default function Configuracoes() {
 const card = { background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: '16px', padding: '1.35rem' };
 const cardTitle = { fontWeight: 800, fontSize: '.9rem', marginBottom: '1rem', color: '#F8FAFC' };
 const ghostBtn = { padding: '.6rem 1.1rem', borderRadius: '8px', fontSize: '.85rem', fontWeight: 500, background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)', color: '#94A3B8', cursor: 'pointer' };
+
 
