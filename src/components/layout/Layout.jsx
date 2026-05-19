@@ -1,123 +1,230 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { supabase } from '@/api/supabaseClient';
 import { TrialBanner, PastDueBanner } from '@/components/ui/AccessGate';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  LayoutDashboard,
+  MessageCircle,
+  Bot,
+  Zap,
+  Users,
+  Target,
+  BarChart3,
+  CreditCard,
+  Settings,
+  Shield,
+  ChevronLeft,
+  ChevronRight,
+  Bell,
+  Search,
+  LogOut,
+  Menu,
+  X,
+  Sparkles,
+  Phone,
+} from 'lucide-react';
 
-/* ── Navigation config ── */
+/* Navigation config with Lucide icons */
 const NAV_MAIN = [
-  { label: 'Dashboard',   icon: '📊', path: 'Dashboard'  },
-  { label: 'WhatsApp',    icon: '🟢', path: 'WhatsApp',  dot: 'connected' },
-  { label: 'Conversas',   icon: '💬', path: 'Chat',       badge: 5 },
-  { label: 'IA',          icon: '🤖', path: 'IA'         },
-  { label: 'Automações',  icon: '🔀', path: 'Automacoes' },
-  { label: 'Leads',       icon: '👥', path: 'Leads'      },
-  { label: 'CRM',         icon: '🎯', path: 'CRM'        },
-  { label: 'Analytics',   icon: '📈', path: 'Analytics'  },
-];
-const NAV_SYSTEM = [
-  { label: 'Planos',        icon: '💳', path: 'Planos'        },
-  { label: 'Configurações', icon: '⚙️', path: 'Configuracoes' },
+  { label: 'Dashboard',   Icon: LayoutDashboard, path: 'Dashboard' },
+  { label: 'WhatsApp',    Icon: Phone,           path: 'WhatsApp', dot: 'connected' },
+  { label: 'Conversas',   Icon: MessageCircle,   path: 'Chat', badge: 5 },
+  { label: 'IA',          Icon: Bot,             path: 'IA' },
+  { label: 'Automacoes',  Icon: Zap,             path: 'Automacoes' },
+  { label: 'Leads',       Icon: Users,           path: 'Leads' },
+  { label: 'CRM',         Icon: Target,          path: 'CRM' },
+  { label: 'Analytics',   Icon: BarChart3,       path: 'Analytics' },
 ];
 
-const PLAN_COLORS = {
-  trial:   { label: 'Trial',   color: '#F59E0B', bg: 'rgba(245,158,11,.12)' },
-  starter: { label: 'Starter', color: '#64748B', bg: 'rgba(100,116,139,.12)' },
-  pro:     { label: 'Pro',     color: '#3B82F6', bg: 'rgba(59,130,246,.15)'  },
-  premium: { label: 'Premium', color: '#8B5CF6', bg: 'rgba(139,92,246,.15)'  },
+const NAV_SYSTEM = [
+  { label: 'Planos',        Icon: CreditCard, path: 'Planos' },
+  { label: 'Configuracoes', Icon: Settings,   path: 'Configuracoes' },
+];
+
+const PLAN_CONFIG = {
+  trial:   { label: 'Trial',   color: 'text-amber-400',  bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
+  starter: { label: 'Starter', color: 'text-slate-400',  bg: 'bg-slate-500/10', border: 'border-slate-500/20' },
+  pro:     { label: 'Pro',     color: 'text-blue-400',   bg: 'bg-blue-500/10',  border: 'border-blue-500/20' },
+  premium: { label: 'Premium', color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
 };
 
 function NavItem({ item, collapsed, active, onClick }) {
-  const [hover, setHover] = useState(false);
-  const bg    = active ? 'rgba(59,130,246,.14)' : hover ? 'rgba(255,255,255,.05)' : 'transparent';
-  const color = active ? '#60A5FA' : hover ? '#F8FAFC' : '#94A3B8';
-
+  const { Icon } = item;
+  
   return (
     <Link
       to={createPageUrl(item.path)}
       onClick={onClick}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        display: 'flex', alignItems: 'center',
-        gap: collapsed ? 0 : '.65rem',
-        padding: collapsed ? '.68rem' : '.6rem .82rem',
-        borderRadius: '10px', background: bg, color,
-        fontWeight: active ? 700 : 500, fontSize: '.87rem',
-        textDecoration: 'none', transition: 'all .15s',
-        justifyContent: collapsed ? 'center' : 'flex-start',
-        position: 'relative',
-      }}
+      className={`
+        group relative flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm
+        transition-all duration-200 ease-out
+        ${active 
+          ? 'bg-white/10 text-white shadow-lg shadow-blue-500/5' 
+          : 'text-slate-400 hover:text-white hover:bg-white/5'
+        }
+        ${collapsed ? 'justify-center px-2.5' : ''}
+      `}
     >
       {/* Active indicator */}
       {active && (
-        <div style={{
-          position: 'absolute', left: 0, top: '20%', height: '60%',
-          width: '3px', borderRadius: '0 2px 2px 0',
-          background: 'linear-gradient(180deg,#3B82F6,#8B5CF6)',
-        }} />
+        <motion.div
+          layoutId="activeNav"
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-blue-400 to-purple-500 rounded-r-full"
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        />
       )}
 
-      <span style={{ fontSize: '1rem', flexShrink: 0 }}>{item.icon}</span>
+      <Icon className={`w-[18px] h-[18px] shrink-0 transition-colors ${active ? 'text-blue-400' : 'group-hover:text-blue-400'}`} />
 
       {!collapsed && (
         <>
-          <span style={{ flex: 1, whiteSpace: 'nowrap' }}>{item.label}</span>
+          <span className="flex-1 truncate">{item.label}</span>
+          
           {item.badge && (
-            <span style={{
-              background: '#EF4444', color: 'white', borderRadius: '100px',
-              padding: '.06rem .45rem', fontSize: '.62rem', fontWeight: 800,
-            }}>{item.badge}</span>
+            <span className="px-2 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full min-w-[18px] text-center">
+              {item.badge}
+            </span>
+          )}
+          
+          {item.dot === 'connected' && (
+            <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
           )}
         </>
+      )}
+
+      {collapsed && item.badge && (
+        <span className="absolute -top-1 -right-1 w-4 h-4 text-[9px] font-bold bg-red-500 text-white rounded-full flex items-center justify-center">
+          {item.badge}
+        </span>
       )}
     </Link>
   );
 }
 
+function UserMenu({ user, collapsed, onLogout }) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef(null);
+  const planC = PLAN_CONFIG[user?.plan] || PLAN_CONFIG.trial;
+  const initials = (user?.full_name || user?.email || '?').split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase();
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={menuRef} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className={`
+          flex items-center gap-3 p-2 rounded-xl w-full
+          hover:bg-white/5 transition-all duration-200
+          ${collapsed ? 'justify-center' : ''}
+        `}
+      >
+        {/* Avatar */}
+        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white ring-2 ring-blue-500/20 shrink-0">
+          {initials}
+        </div>
+
+        {!collapsed && (
+          <div className="flex-1 text-left min-w-0">
+            <p className="text-sm font-semibold text-white truncate">
+              {user?.full_name || user?.email}
+            </p>
+            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold rounded-md ${planC.bg} ${planC.color} ${planC.border} border`}>
+              {planC.label}
+            </span>
+          </div>
+        )}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.96 }}
+            transition={{ duration: 0.15 }}
+            className={`
+              absolute bottom-full mb-2 ${collapsed ? 'left-full ml-2' : 'left-0 right-0'}
+              bg-slate-900 border border-white/10 rounded-xl shadow-2xl shadow-black/50
+              overflow-hidden min-w-[200px] z-50
+            `}
+          >
+            <div className="p-3 border-b border-white/5">
+              <p className="text-sm font-medium text-white truncate">{user?.full_name}</p>
+              <p className="text-xs text-slate-400 truncate">{user?.email}</p>
+            </div>
+            <div className="p-1.5">
+              <Link
+                to={createPageUrl('Configuracoes')}
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+                Configuracoes
+              </Link>
+              <button
+                onClick={() => { setOpen(false); onLogout(); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Sair
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function Layout({ children, currentPageName }) {
-  const [collapsed,   setCollapsed]   = useState(false);
-  const [mobileOpen,  setMobileOpen]  = useState(false);
-  const [user,        setUser]        = useState(null);
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [user, setUser] = useState(null);
   const location = useLocation();
-  const W = collapsed ? '66px' : '234px';
 
-useEffect(() => {
-  function buildUser(u) {
-    if (!u) return null;
-    return {
-      full_name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0] || '',
-      email: u.email || '',
-      plan: u.user_metadata?.plano || 'trial',
-      plan_status: 'active',
-      is_admin: false,
-    };
-  }
-
-  // getUser() vai ao SERVIDOR — nunca usa cache local
-  // Isso garante que sempre lemos o usuário atual de verdade
-  supabase.auth.getUser().then(({ data: { user } }) => {
-    setUser(buildUser(user ?? null));
-  });
-
-  // onAuthStateChange captura qualquer troca de sessão
-  const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_OUT') {
-      setUser(null);
-      return;
+  useEffect(() => {
+    function buildUser(u) {
+      if (!u) return null;
+      return {
+        full_name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0] || '',
+        email: u.email || '',
+        plan: u.user_metadata?.plano || 'trial',
+        plan_status: 'active',
+        is_admin: false,
+      };
     }
-    // Async IIFE evita deadlock ao chamar getUser() dentro do callback
-    if (session?.user) {
-      (async () => {
-        const { data: { user } } = await supabase.auth.getUser();
-        setUser(buildUser(user ?? null));
-      })();
-    }
-  });
 
-  return () => authListener?.subscription?.unsubscribe();
-}, []);
-  /* Close mobile drawer on route change */
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(buildUser(user ?? null));
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        return;
+      }
+      if (session?.user) {
+        (async () => {
+          const { data: { user } } = await supabase.auth.getUser();
+          setUser(buildUser(user ?? null));
+        })();
+      }
+    });
+
+    return () => authListener?.subscription?.unsubscribe();
+  }, []);
+
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
   function isActive(path) {
@@ -128,259 +235,199 @@ useEffect(() => {
     );
   }
 
- async function logout() {
-  await supabase.auth.signOut();
-  window.location.href = '/';
-}
-
-  const planC = PLAN_COLORS[user?.plan] || PLAN_COLORS.trial;
-  const initials = (user?.full_name || user?.email || '?').split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase();
+  async function logout() {
+    await supabase.auth.signOut();
+    window.location.href = '/';
+  }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#070C18', fontFamily: 'Inter,sans-serif', color: '#F8FAFC' }}>
+    <div className="flex min-h-screen bg-[#0a0a0f] font-sans text-slate-100">
 
       {/* Mobile overlay */}
-      {mobileOpen && (
-        <div
-          onClick={() => setMobileOpen(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', zIndex: 48, backdropFilter: 'blur(4px)' }}
-        />
-      )}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setMobileOpen(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
 
-      {/* ── SIDEBAR ── */}
-      <aside style={{
-        width: W, flexShrink: 0, height: '100vh',
-        position: 'sticky', top: 0, zIndex: 50,
-        background: 'rgba(5,9,20,.99)',
-        borderRight: '1px solid rgba(255,255,255,.07)',
-        display: 'flex', flexDirection: 'column',
-        transition: 'width .28s cubic-bezier(.4,0,.2,1)',
-        overflowX: 'hidden', overflowY: 'auto',
-        // Mobile: hidden off-screen, slides in
-        ...(mobileOpen
-          ? { position: 'fixed', height: '100%' }
-          : {}),
-      }}>
-
-        {/* Logo row */}
-        <div style={{
-          height: '62px', flexShrink: 0,
-          display: 'flex', alignItems: 'center',
-          padding: collapsed ? '0 1rem' : '0 1.1rem',
-          borderBottom: '1px solid rgba(255,255,255,.07)',
-          gap: '.7rem',
-        }}>
-          <div style={{
-            width: '34px', height: '34px', borderRadius: '9px', flexShrink: 0,
-            background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '.9rem', boxShadow: '0 0 18px rgba(59,130,246,.35)',
-          }}>🤖</div>
-
+      {/* Sidebar */}
+      <motion.aside
+        initial={false}
+        animate={{ width: collapsed ? 72 : 260 }}
+        transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+        className={`
+          h-screen sticky top-0 z-50 flex flex-col shrink-0
+          bg-[#0d0d12] border-r border-white/5
+          ${mobileOpen ? 'fixed inset-y-0 left-0 w-[260px]' : 'hidden lg:flex'}
+        `}
+      >
+        {/* Logo */}
+        <div className={`h-16 flex items-center shrink-0 border-b border-white/5 ${collapsed ? 'px-4 justify-center' : 'px-5'}`}>
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/25 shrink-0">
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
+          
           {!collapsed && (
-            <>
-              <span style={{ fontSize: '1.05rem', fontWeight: 900, whiteSpace: 'nowrap', flex: 1 }}>
-                GVP<span style={{ color: '#3B82F6' }}>BOT</span>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="ml-3 flex items-center justify-between flex-1"
+            >
+              <span className="text-lg font-black tracking-tight">
+                GVP<span className="text-blue-400">BOT</span>
               </span>
-              <button onClick={() => setCollapsed(true)} style={collapseBtn} title="Recolher">◀</button>
-            </>
+              <button
+                onClick={() => setCollapsed(true)}
+                className="p-1.5 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            </motion.div>
           )}
 
           {collapsed && (
-            <button onClick={() => setCollapsed(false)} style={{ ...collapseBtn, margin: '0 auto' }} title="Expandir">▶</button>
+            <button
+              onClick={() => setCollapsed(false)}
+              className="absolute -right-3 top-6 w-6 h-6 bg-slate-800 border border-white/10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all shadow-lg"
+            >
+              <ChevronRight className="w-3 h-3" />
+            </button>
           )}
         </div>
 
         {/* Navigation */}
-        <nav style={{ flex: 1, padding: '.6rem .45rem', display: 'flex', flexDirection: 'column', gap: '.08rem' }}>
-
+        <nav className="flex-1 p-3 flex flex-col gap-1 overflow-y-auto scrollbar-hide">
           {!collapsed && (
-            <div style={sectionLabel}>Principal</div>
+            <span className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+              Principal
+            </span>
           )}
 
           {NAV_MAIN.map(item => (
             <NavItem key={item.path} item={item} collapsed={collapsed} active={isActive(item.path)} />
           ))}
 
-          <div style={{ flex: 1, minHeight: '1rem' }} />
+          <div className="flex-1 min-h-4" />
 
           {!collapsed && (
-            <div style={sectionLabel}>Sistema</div>
+            <span className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+              Sistema
+            </span>
           )}
 
           {NAV_SYSTEM.map(item => (
             <NavItem key={item.path} item={item} collapsed={collapsed} active={isActive(item.path)} />
           ))}
 
-          {/* Admin link — only for admins */}
+          {/* Admin link */}
           {user?.is_admin && (
             <Link
               to={createPageUrl('Admin')}
-              style={{
-                display: 'flex', alignItems: 'center',
-                gap: collapsed ? 0 : '.65rem',
-                padding: collapsed ? '.68rem' : '.6rem .82rem',
-                borderRadius: '10px', marginTop: '.25rem',
-                background: isActive('Admin') ? 'rgba(239,68,68,.12)' : 'transparent',
-                border: `1px dashed ${isActive('Admin') ? 'rgba(239,68,68,.35)' : 'rgba(239,68,68,.18)'}`,
-                color: isActive('Admin') ? '#FCA5A5' : '#64748B',
-                fontWeight: isActive('Admin') ? 700 : 500, fontSize: '.87rem',
-                textDecoration: 'none', transition: 'all .15s',
-                justifyContent: collapsed ? 'center' : 'flex-start',
-              }}
+              className={`
+                flex items-center gap-3 px-3 py-2.5 rounded-xl mt-1
+                border border-dashed border-red-500/30 text-slate-400
+                hover:text-red-300 hover:bg-red-500/5 hover:border-red-500/50
+                transition-all duration-200
+                ${collapsed ? 'justify-center' : ''}
+                ${isActive('Admin') ? 'bg-red-500/10 text-red-400 border-red-500/40' : ''}
+              `}
             >
-              <span style={{ fontSize: '1rem', flexShrink: 0 }}>🛡️</span>
-              {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>Admin</span>}
+              <Shield className="w-[18px] h-[18px]" />
+              {!collapsed && <span className="text-sm font-medium">Admin</span>}
             </Link>
           )}
         </nav>
 
-        {/* User card */}
+        {/* User */}
         {user && (
-          <div style={{
-            padding: '.8rem .9rem',
-            borderTop: '1px solid rgba(255,255,255,.07)',
-            display: 'flex', alignItems: 'center',
-            gap: collapsed ? 0 : '.7rem', flexShrink: 0,
-            justifyContent: collapsed ? 'center' : 'flex-start',
-          }}>
-            {/* Avatar */}
-            <div style={{
-              width: '33px', height: '33px', borderRadius: '50%', flexShrink: 0,
-              background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '.7rem', fontWeight: 800, border: '2px solid rgba(59,130,246,.3)',
-            }}>{initials}</div>
-
-            {!collapsed && (
-              <>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{
-                    fontSize: '.8rem', fontWeight: 700,
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>{user.full_name || user.email}</div>
-                  <span style={{
-                    padding: '.1rem .42rem', borderRadius: '100px',
-                    fontSize: '.6rem', fontWeight: 800,
-                    background: planC.bg, color: planC.color,
-                  }}>{planC.label}</span>
-                </div>
-                <button
-                  onClick={logout}
-                  title="Sair"
-                  style={{
-                    background: 'none', border: 'none', color: '#475569',
-                    cursor: 'pointer', fontSize: '.88rem', padding: '.2rem',
-                    borderRadius: '6px', flexShrink: 0,
-                    transition: 'color .15s',
-                  }}
-                  onMouseOver={e => e.currentTarget.style.color = '#EF4444'}
-                  onMouseOut={e  => e.currentTarget.style.color = '#475569'}
-                >⬅️</button>
-              </>
-            )}
+          <div className={`p-3 border-t border-white/5 ${collapsed ? 'px-2' : ''}`}>
+            <UserMenu user={user} collapsed={collapsed} onLogout={logout} />
           </div>
         )}
-      </aside>
+      </motion.aside>
 
-      {/* ── MAIN CONTENT ── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
 
-        {/* Top bar */}
-        <header style={{
-          height: '62px', flexShrink: 0,
-          display: 'flex', alignItems: 'center',
-          padding: '0 1.5rem', gap: '1rem',
-          background: 'rgba(5,9,20,.97)',
-          borderBottom: '1px solid rgba(255,255,255,.07)',
-          backdropFilter: 'blur(20px)',
-          position: 'sticky', top: 0, zIndex: 40,
-        }}>
-          {/* Mobile hamburger */}
+        {/* Top Header */}
+        <header className="h-16 shrink-0 flex items-center px-4 lg:px-6 gap-4 bg-[#0d0d12]/80 backdrop-blur-xl border-b border-white/5 sticky top-0 z-30">
+          {/* Mobile menu */}
           <button
             onClick={() => setMobileOpen(true)}
-            style={{ display: 'none', background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: '1.2rem' }}
-            className="ham"
-          >☰</button>
+            className="lg:hidden p-2 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
 
           {/* Page title */}
-          <h1 style={{ flex: 1, fontSize: '.95rem', fontWeight: 800, letterSpacing: '-.2px', margin: 0 }}>
+          <h1 className="text-base font-bold tracking-tight flex-1">
             {currentPageName}
           </h1>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '.65rem' }}>
-            {/* Online badge */}
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '.4rem',
-              padding: '.28rem .75rem', borderRadius: '100px',
-              background: 'rgba(34,197,94,.08)', border: '1px solid rgba(34,197,94,.2)',
-            }}>
-              <span style={{
-                width: '6px', height: '6px', borderRadius: '50%',
-                background: '#22C55E', display: 'inline-block',
-                animation: 'pulseDot 2s infinite',
-              }} />
-              <span style={{ fontSize: '.7rem', color: '#22C55E', fontWeight: 600 }}>Online</span>
+          {/* Search */}
+          <div className="hidden md:flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/5 rounded-xl text-slate-400 w-64 hover:border-white/10 transition-colors cursor-pointer">
+            <Search className="w-4 h-4" />
+            <span className="text-sm">Buscar...</span>
+            <kbd className="ml-auto px-1.5 py-0.5 text-[10px] font-medium bg-white/10 rounded">K</kbd>
+          </div>
+
+          {/* Status & Actions */}
+          <div className="flex items-center gap-2">
+            {/* Online status */}
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+              <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+              <span className="text-xs font-medium text-emerald-400">Online</span>
             </div>
 
             {/* Notifications */}
-            <button style={{
-              position: 'relative', width: '36px', height: '36px',
-              borderRadius: '10px', background: 'rgba(255,255,255,.05)',
-              border: '1px solid rgba(255,255,255,.08)', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.9rem',
-            }}>
-              🔔
-              <div style={{
-                position: 'absolute', top: '5px', right: '5px',
-                width: '7px', height: '7px', borderRadius: '50%',
-                background: '#EF4444', border: '1.5px solid #070C18',
-              }} />
+            <button className="relative p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all">
+              <Bell className="w-4 h-4 text-slate-400" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-[#0d0d12]" />
             </button>
 
-            {/* Avatar */}
+            {/* Avatar (mobile) */}
             {user && (
-              <div style={{
-                width: '34px', height: '34px', borderRadius: '50%', cursor: 'pointer',
-                background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '.75rem', fontWeight: 800,
-                border: '2px solid rgba(59,130,246,.3)',
-              }} title={user.full_name || user.email}>{initials}</div>
+              <div className="lg:hidden w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white ring-2 ring-blue-500/20">
+                {(user.full_name || user.email || '?').split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+              </div>
             )}
           </div>
         </header>
 
-        {/* Page content */}
-        <main style={{ flex: 1, overflow: 'auto', padding: '1.5rem' }}>
+        {/* Page Content */}
+        <main className="flex-1 p-4 lg:p-6 overflow-auto">
           <TrialBanner />
           <PastDueBanner />
           {children}
         </main>
       </div>
 
+      {/* Mobile close button */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setMobileOpen(false)}
+            className="fixed top-4 right-4 z-50 p-2 rounded-full bg-white/10 text-white lg:hidden"
+          >
+            <X className="w-5 h-5" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Global Styles */}
       <style>{`
-        @keyframes pulseDot {
-          0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,.5); }
-          50%      { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
-        }
-        @media (max-width: 768px) {
-          .ham { display: flex !important; }
-        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
   );
 }
-
-const collapseBtn = {
-  background: 'none', border: 'none', color: '#475569', cursor: 'pointer',
-  fontSize: '.85rem', padding: '.25rem .35rem', borderRadius: '6px',
-  fontFamily: 'inherit', transition: 'color .15s',
-};
-const sectionLabel = {
-  fontSize: '.6rem', fontWeight: 700, textTransform: 'uppercase',
-  letterSpacing: '1.2px', color: '#2D3F56',
-  padding: '.35rem .82rem .15rem', marginTop: '.4rem',
-};
-
-
