@@ -44,11 +44,11 @@ function ProtectedRoute({ Page, name }) {
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
-      // Quando muda sessão, busca usuário real do servidor
       if (session?.user) {
-        supabase.auth.getUser().then(({ data: { user } }) => {
+        (async () => {
+          const { data: { user } } = await supabase.auth.getUser();
           setUser(user ?? null);
-        });
+        })();
       } else {
         setUser(null);
       }

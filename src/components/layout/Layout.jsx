@@ -1,4 +1,3 @@
-SHA: 7c55c8727b103add1a406447e02a9990a1ad89e3
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -107,11 +106,12 @@ useEffect(() => {
       setUser(null);
       return;
     }
-    // Para SIGNED_IN e TOKEN_REFRESHED: busca do servidor para garantir dados frescos
+    // Async IIFE evita deadlock ao chamar getUser() dentro do callback
     if (session?.user) {
-      supabase.auth.getUser().then(({ data: { user } }) => {
+      (async () => {
+        const { data: { user } } = await supabase.auth.getUser();
         setUser(buildUser(user ?? null));
-      });
+      })();
     }
   });
 
