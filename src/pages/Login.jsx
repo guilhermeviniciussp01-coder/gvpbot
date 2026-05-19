@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { signIn, supabase } from '@/api/supabaseClient';
+import { signIn, resetPassword, supabase } from '@/api/supabaseClient';
+
 const inp = { width: '100%', padding: '.72rem 1rem', borderRadius: '10px', background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', color: '#F8FAFC', fontSize: '.9rem', fontFamily: 'Inter,sans-serif', outline: 'none', boxSizing: 'border-box' };
 
 export default function Login() {
@@ -8,21 +9,38 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading]   = useState(false);
   const [toast, setToast]       = useState(null);
+  const [mode, setMode]         = useState('login'); // 'login' | 'forgot'
+  const [resetSent, setResetSent] = useState(false);
+
   function showToast(message, type = 'error') {
     setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
+    setTimeout(() => setToast(null), 4500);
   }
 
   async function handleLogin(e) {
     e.preventDefault();
     if (!email || !password) { showToast('Preencha todos os campos'); return; }
     setLoading(true);
-  try {
-    await supabase.auth.signOut(); // limpa sessão antiga
-    await signIn(email.trim().toLowerCase(), password);
-    window.location.href = '/Dashboard'; // força reload completo para limpar estado
-  } catch (err) {
+    try {
+      await supabase.auth.signOut();
+      await signIn(email.trim().toLowerCase(), password);
+      window.location.href = '/Dashboard';
+    } catch {
       showToast('E-mail ou senha incorretos.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleReset(e) {
+    e.preventDefault();
+    if (!email) { showToast('Digite seu e-mail'); return; }
+    setLoading(true);
+    try {
+      await resetPassword(email.trim().toLowerCase());
+      setResetSent(true);
+    } catch (err) {
+      showToast(err.message || 'Erro ao enviar e-mail');
     } finally {
       setLoading(false);
     }
@@ -33,7 +51,6 @@ export default function Login() {
       <div style={{ position:'absolute', width:'500px', height:'500px', borderRadius:'50%', background:'rgba(59,130,246,.15)', filter:'blur(100px)', top:'-200px', left:'-100px', pointerEvents:'none' }} />
       <div style={{ position:'absolute', width:'500px', height:'500px', borderRadius:'50%', background:'rgba(139,92,246,.12)', filter:'blur(100px)', bottom:'-150px', right:'-100px', pointerEvents:'none' }} />
 
-      {/* LEFT */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem', minHeight: '100vh' }}>
         <div style={{ width: '100%', maxWidth: '420px' }}>
 
@@ -42,73 +59,81 @@ export default function Login() {
             GVP<span style={{ color: '#3B82F6' }}>BOT</span>
           </Link>
 
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 900, letterSpacing: '-.5px', marginBottom: '.5rem' }}>Bem-vindo de volta</h1>
-          <p style={{ color: '#64748B', fontSize: '.92rem', marginBottom: '2rem' }}>Entre para acessar seu painel</p>
+          {/* ── LOGIN ── */}
+          {mode === 'login' && (
+            <>
+              <h1 style={{ fontSize: '1.75rem', fontWeight: 900, letterSpacing: '-.5px', marginBottom: '.5rem' }}>Bem-vindo de volta</h1>
+              <p style={{ color: '#64748B', fontSize: '.92rem', marginBottom: '2rem' }}>Entre para acessar seu painel</p>
+              <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ fontSize: '.8rem', color: '#94A3B8', display: 'block', marginBottom: '.4rem' }}>E-mail</label>
+                  <input style={inp} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com" autoComplete="email" />
+                </div>
+                <div>
+                  <label style={{ fontSize: '.8rem', color: '#94A3B8', display: 'block', marginBottom: '.4rem' }}>Senha</label>
+                  <input style={inp} type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Sua senha" autoComplete="current-password" />
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <button type="button" onClick={() => setMode('forgot')} style={{ background: 'none', border: 'none', color: '#60A5FA', fontSize: '.82rem', cursor: 'pointer', padding: 0 }}>
+                    Esqueci minha senha
+                  </button>
+                </div>
+                <button type="submit" disabled={loading} style={{ padding: '.85rem', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', color: 'white', fontWeight: 700, fontSize: '.95rem', cursor: 'pointer', opacity: loading ? .7 : 1, marginTop: '.25rem' }}>
+                  {loading ? '⏳ Entrando...' : 'Entrar →'}
+                </button>
+              </form>
+              <p style={{ textAlign: 'center', marginTop: '1.5rem', color: '#64748B', fontSize: '.88rem' }}>
+                Não tem conta?{' '}
+                <Link to="/Cadastro" style={{ color: '#60A5FA', textDecoration: 'none', fontWeight: 600 }}>Criar conta grátis</Link>
+              </p>
+            </>
+          )}
 
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div>
-              <label style={{ fontSize: '.8rem', color: '#94A3B8', display: 'block', marginBottom: '.4rem' }}>E-mail</label>
-              <input style={inp} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com" required />
-            </div>
-            <div>
-              <label style={{ fontSize: '.8rem', color: '#94A3B8', display: 'block', marginBottom: '.4rem' }}>Senha</label>
-              <input style={inp} type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Link to="/recuperar" style={{ fontSize: '.8rem', color: '#3B82F6', textDecoration: 'none' }}>Esqueci a senha</Link>
-            </div>
-            <button type="submit" disabled={loading} style={{ padding: '.8rem', borderRadius: '10px', background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', border: 'none', color: 'white', fontWeight: 700, fontSize: '.95rem', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? .7 : 1, fontFamily: 'Inter,sans-serif' }}>
-              {loading ? '⏳ Entrando...' : 'Entrar no painel →'}
-            </button>
-          </form>
+          {/* ── RECUPERAR SENHA ── */}
+          {mode === 'forgot' && !resetSent && (
+            <>
+              <h1 style={{ fontSize: '1.6rem', fontWeight: 900, marginBottom: '.5rem' }}>Recuperar senha</h1>
+              <p style={{ color: '#64748B', fontSize: '.92rem', marginBottom: '2rem' }}>Enviaremos um link para redefinir sua senha</p>
+              <form onSubmit={handleReset} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ fontSize: '.8rem', color: '#94A3B8', display: 'block', marginBottom: '.4rem' }}>E-mail cadastrado</label>
+                  <input style={inp} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com" autoComplete="email" />
+                </div>
+                <button type="submit" disabled={loading} style={{ padding: '.85rem', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', color: 'white', fontWeight: 700, fontSize: '.95rem', cursor: 'pointer', opacity: loading ? .7 : 1 }}>
+                  {loading ? '⏳ Enviando...' : '📧 Enviar link de recuperação'}
+                </button>
+              </form>
+              <button type="button" onClick={() => setMode('login')} style={{ display: 'block', margin: '1.25rem auto 0', background: 'none', border: 'none', color: '#64748B', fontSize: '.85rem', cursor: 'pointer' }}>
+                ← Voltar para login
+              </button>
+            </>
+          )}
 
-          <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '.85rem', color: '#64748B' }}>
-            Não tem conta?{' '}
-            <Link to="/Cadastro" style={{ color: '#3B82F6', textDecoration: 'none', fontWeight: 700 }}>Cadastre-se grátis →</Link>
-          </div>
+          {/* ── CONFIRMAÇÃO ── */}
+          {mode === 'forgot' && resetSent && (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📧</div>
+              <h1 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '.75rem' }}>E-mail enviado!</h1>
+              <p style={{ color: '#64748B', fontSize: '.9rem', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+                Verifique sua caixa de entrada em <strong style={{ color: '#F8FAFC' }}>{email}</strong> e clique no link para redefinir sua senha.
+              </p>
+              <button onClick={() => { setMode('login'); setResetSent(false); }} style={{ padding: '.75rem 1.5rem', borderRadius: '10px', border: 'none', background: 'rgba(255,255,255,.07)', color: '#F8FAFC', cursor: 'pointer', fontWeight: 600 }}>
+                ← Voltar para login
+              </button>
+            </div>
+          )}
+
+          {/* Toast */}
+          {toast && (
+            <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', padding: '.85rem 1.25rem', borderRadius: '10px', background: toast.type === 'success' ? '#065F46' : '#7F1D1D', border: `1px solid ${toast.type === 'success' ? '#10B981' : '#EF4444'}`, color: 'white', fontSize: '.88rem', fontWeight: 600, zIndex: 1000, maxWidth: '320px' }}>
+              {toast.message}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* RIGHT */}
-      <div className="login-right" style={{ width: '45%', background: 'linear-gradient(135deg,rgba(59,130,246,.08),rgba(139,92,246,.06))', borderLeft: '1px solid rgba(255,255,255,.07)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem 2rem' }}>
-        <div style={{ maxWidth: '380px', width: '100%' }}>
-          <div style={{ fontSize: '1.5rem', fontWeight: 900, letterSpacing: '-.5px', marginBottom: '1rem' }}>Atenda 24h sem precisar estar online</div>
-          <div style={{ fontSize: '.88rem', color: '#94A3B8', lineHeight: 1.7, marginBottom: '2.5rem' }}>Enquanto você dorme, o bot está capturando leads, respondendo clientes e fechando vendas.</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.75rem', marginBottom: '2rem' }}>
-            {[
-              { v: '1.247', l: 'Conversas hoje', c: '#3B82F6' },
-              { v: '89',    l: 'Leads gerados',  c: '#22C55E' },
-              { v: '99,9%', l: 'Uptime',         c: '#8B5CF6' },
-              { v: '0,3s',  l: 'Resposta IA',    c: '#F59E0B' },
-            ].map((m, i) => (
-              <div key={i} style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.07)', borderRadius: '12px', padding: '.85rem' }}>
-                <div style={{ fontSize: '1.3rem', fontWeight: 900, color: m.c }}>{m.v}</div>
-                <div style={{ fontSize: '.72rem', color: '#64748B', marginTop: '.1rem' }}>{m.l}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)', borderRadius: '14px', padding: '1.1rem' }}>
-            <div style={{ marginBottom: '.6rem' }}>{'★★★★★'.split('').map((s,i) => <span key={i} style={{ color: '#FCD34D', fontSize: '.8rem' }}>{s}</span>)}</div>
-            <div style={{ fontSize: '.82rem', color: '#94A3B8', fontStyle: 'italic', lineHeight: 1.6, marginBottom: '.75rem' }}>"Em 30 dias passei de 12 para 89 vendas/mês usando o GVP BOT."</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem' }}>
-              <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'linear-gradient(135deg,#EC4899,#BE185D)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.65rem', fontWeight: 700 }}>MC</div>
-              <div>
-                <div style={{ fontSize: '.78rem', fontWeight: 700 }}>Marcela Costa</div>
-                <div style={{ fontSize: '.65rem', color: '#64748B' }}>Boutique Estilo, RJ</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {toast && (
-        <div style={{ position: 'fixed', bottom: '2rem', left: '50%', transform: 'translateX(-50%)', background: toast.type === 'success' ? '#22C55E' : '#EF4444', color: 'white', padding: '.8rem 1.5rem', borderRadius: '10px', fontWeight: 600, fontSize: '.9rem', zIndex: 9999 }}>
-          {toast.message}
-        </div>
-      )}
-
-      <style>{`@media(max-width:900px){.login-right{display:none!important}}`}</style>
+      {/* Right panel — decorativo */}
+      <div style={{ flex: 1, display: 'none', background: 'rgba(255,255,255,.01)', borderLeft: '1px solid rgba(255,255,255,.06)', alignItems: 'center', justifyContent: 'center', padding: '3rem', '@media(min-width:900px)': { display: 'flex' } }} />
     </div>
   );
 }
-
