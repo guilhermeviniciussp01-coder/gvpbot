@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase, getUserConfig, saveUserConfig } from '@/api/supabaseClient';
-import { useToast } from '@/components/ui/Toast';
+import { useToast, addNotification } from '@/components/ui/Toast';
 
 const FREE_MODELS = [
   { value: 'mistralai/mistral-7b-instruct:free', label: '⚡ Mistral 7B (Gratuito)', free: true },
@@ -84,6 +84,7 @@ export default function IA() {
         temperature: config.temperature,
       });
       toast({ message: '✅ Configurações de IA salvas!', type: 'success' });
+      addNotification({ icon: '🤖', title: 'IA configurada', body: `Modelo: ${config.ai_model.split('/').pop()}`, type: 'success' });
     } catch (err) {
       toast({ message: `❌ Erro: ${err.message}`, type: 'error' });
     } finally {
@@ -131,6 +132,7 @@ export default function IA() {
       setMessages(p => [...p, { role: 'assistant', content: reply }]);
     } catch (err) {
       setMessages(p => [...p, { role: 'assistant', content: `❌ Erro: ${err.message}` }]);
+      addNotification({ icon: '⚠️', title: 'Erro na IA', body: err.message, type: 'error' });
     } finally {
       setTesting(false);
     }
@@ -314,3 +316,4 @@ export default function IA() {
     </div>
   );
 }
+
