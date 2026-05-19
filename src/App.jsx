@@ -22,6 +22,7 @@ import WhatsApp      from '@/pages/WhatsApp';
 import IA            from '@/pages/IA';
 import Automacoes    from '@/pages/Automacoes';
 import Admin         from '@/pages/Admin';
+import Onboarding    from '@/pages/Onboarding';
 
 function AppLoader() {
   return (
@@ -59,6 +60,17 @@ function ProtectedRoute({ Page, name }) {
   if (user === undefined) return <AppLoader />;
   if (!user) return <Navigate to="/Login" replace />;
 
+  // Redirecionar novos usuários para onboarding (apenas na primeira visita ao Dashboard)
+  if (name === 'Dashboard') {
+    const seenOnboarding = localStorage.getItem('gvpbot_onboarding_seen');
+    const createdAt = user.created_at ? new Date(user.created_at) : null;
+    const isNew = createdAt && (Date.now() - createdAt.getTime()) < 1000 * 60 * 60 * 24 * 3; // < 3 dias
+    if (!seenOnboarding && isNew) {
+      localStorage.setItem('gvpbot_onboarding_seen', '1');
+      return <Navigate to="/Onboarding" replace />;
+    }
+  }
+
   return (
     <Layout currentPageName={name}>
       <Page />
@@ -89,6 +101,7 @@ const APP_ROUTES = [
   { paths: ['/Planos',        '/planos'],         name: 'Planos & Assinatura',     Page: Planos        },
   { paths: ['/Configuracoes', '/configuracoes'],  name: 'Configurações',           Page: Configuracoes },
   { paths: ['/Admin',         '/admin'],          name: 'Painel Admin',            Page: Admin         },
+  { paths: ['/Onboarding',    '/onboarding'],     name: 'Primeiros Passos',        Page: Onboarding    },
 ];
 
 export default function App() {
@@ -112,4 +125,5 @@ export default function App() {
     </ToastProvider>
   );
 }
+
 
