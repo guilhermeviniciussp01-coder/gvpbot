@@ -23,6 +23,7 @@ import IA            from '@/pages/IA';
 import Automacoes    from '@/pages/Automacoes';
 import Admin         from '@/pages/Admin';
 import Onboarding    from '@/pages/Onboarding';
+import Logs          from '@/pages/Logs';
 
 function AppLoader() {
   return (
@@ -33,13 +34,10 @@ function AppLoader() {
   );
 }
 
-// ── Rota protegida — redireciona para login se não estiver logado ──
 function ProtectedRoute({ Page, name }) {
-  // undefined = carregando, null = não logado, objeto = logado
   const [user, setUser] = useState(undefined);
 
   useEffect(() => {
-    // getUser() vai ao SERVIDOR — garante usuário real, sem cache
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user ?? null);
     });
@@ -60,11 +58,10 @@ function ProtectedRoute({ Page, name }) {
   if (user === undefined) return <AppLoader />;
   if (!user) return <Navigate to="/Login" replace />;
 
-  // Redirecionar novos usuários para onboarding (apenas na primeira visita ao Dashboard)
   if (name === 'Dashboard') {
     const seenOnboarding = localStorage.getItem('gvpbot_onboarding_seen');
     const createdAt = user.created_at ? new Date(user.created_at) : null;
-    const isNew = createdAt && (Date.now() - createdAt.getTime()) < 1000 * 60 * 60 * 24 * 3; // < 3 dias
+    const isNew = createdAt && (Date.now() - createdAt.getTime()) < 1000 * 60 * 60 * 24 * 3;
     if (!seenOnboarding && isNew) {
       localStorage.setItem('gvpbot_onboarding_seen', '1');
       return <Navigate to="/Onboarding" replace />;
@@ -98,6 +95,7 @@ const APP_ROUTES = [
   { paths: ['/WhatsApp',      '/whatsapp'],       name: 'WhatsApp',                Page: WhatsApp      },
   { paths: ['/IA',            '/ia'],             name: 'Inteligência Artificial', Page: IA            },
   { paths: ['/Automacoes',    '/automacoes'],     name: 'Automações',              Page: Automacoes    },
+  { paths: ['/Logs',          '/logs'],           name: 'Logs',                    Page: Logs          },
   { paths: ['/Planos',        '/planos'],         name: 'Planos & Assinatura',     Page: Planos        },
   { paths: ['/Configuracoes', '/configuracoes'],  name: 'Configurações',           Page: Configuracoes },
   { paths: ['/Admin',         '/admin'],          name: 'Painel Admin',            Page: Admin         },
@@ -125,5 +123,3 @@ export default function App() {
     </ToastProvider>
   );
 }
-
-
